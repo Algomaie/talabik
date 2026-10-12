@@ -1,0 +1,32 @@
+.gradient-text {
+  background: linear-gradient(135deg, var(--primary-light), var(--accent));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.stats-grid .stat-card {
+  padding: 1.5rem;
+}
+
+.stat-compact {
+  padding: 1rem 1.25rem !important;
+}
+
+.stat-compact .stat-mini-value {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.stat-compact .stat-mini-label {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.stat-mini-icon {
+  color: var(--primary-light);
+  opacity: 0.7;
+}
