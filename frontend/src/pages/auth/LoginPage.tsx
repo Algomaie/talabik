@@ -48,7 +48,7 @@ export default function LoginPage() {
           <h2>Welcome Back</h2>
           <p className="auth-subtitle">Sign in to your account</p>
 
-          {error && <div className="auth-error animate-fade-in">{error}</div>}
+          {error && <div role="alert" className="auth-error animate-fade-in">{error}</div>}
 
           <div className="input-group">
             <label htmlFor="email">Email</label>
@@ -76,7 +76,7 @@ export default function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
               />
-              <button type="button" className="pw-toggle" onClick={() => setShowPw(!showPw)}>
+              <button type="button" aria-label={showPw ? 'Hide password' : 'Show password'} className="pw-toggle" onClick={() => setShowPw(!showPw)}>
                 {showPw ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
@@ -88,7 +88,7 @@ export default function LoginPage() {
             )}
           </button>
 
-          <div className="auth-demo">
+          {import.meta.env.DEV && <div className="auth-demo">
             <p>Demo Accounts:</p>
             <div className="demo-accounts">
               {[
@@ -107,7 +107,7 @@ export default function LoginPage() {
                 </button>
               ))}
             </div>
-          </div>
+          </div>}
 
           <p className="auth-footer">
             Don't have an account? <Link to="/register">Create one</Link>

@@ -1,4 +1,5 @@
-import { query } from '../../config/database';
+import { query, withTransaction } from '../../config/database';
+import { ConflictError } from '../../common/errors';
 import { Order, OrderItem } from './orders.types';
 
 function mapOrderRow(row: any): Order {
@@ -136,28 +137,37 @@ export class OrdersRepository {
     return result.rows.map(mapItemRow);
   }
 
-  async updateStatus(id: string, status: string, timestampField?: string): Promise<Order> {
+  async updateStatus(id: string, status: string, timestampField?: string, expectedStatus?: string): Promise<Order> {
     let extraSet = '';
     if (timestampField) {
+      if (!['confirmed_at', 'preparing_at', 'ready_at', 'picked_up_at', 'delivered_at'].includes(timestampField)) throw new Error('Invalid timestamp column');
       extraSet = `, ${timestampField} = NOW()`;
     }
 
     const result = await query(
       `UPDATE orders SET status = $1, updated_at = NOW()${extraSet}
-       WHERE id = $2 RETURNING *`,
-      [status, id]
+       WHERE id = $2 AND ($3::text IS NULL OR status = $3) RETURNING *`,
+      [status, id, expectedStatus ?? null]
     );
+    if (!result.rows.length) throw new ConflictError('Order status changed; reload and retry', 'ORDER_CHANGED');
     return mapOrderRow(result.rows[0]);
   }
 
-  async cancelOrder(id: string, cancelledBy: string, reason: string): Promise<Order> {
-    const result = await query(
-      `UPDATE orders SET status = 'CANCELLED', cancelled_by = $1, cancel_reason = $2,
+  async cancelOrder(id: string, cancelledBy: string, reason: string, expectedStatus: string): Promise<Order> {
+    return withTransaction(async (client) => {
+    const result = await client.query(
+      `UPDATE orders SET status = $5, cancelled_by = $1, cancel_reason = $2,
                          cancelled_at = NOW(), updated_at = NOW()
-       WHERE id = $3 RETURNING *`,
-      [cancelledBy, reason, id]
+       WHERE id = $3 AND status = $4 RETURNING *`,
+      [cancelledBy, reason, id, expectedStatus, cancelledBy === 'MERCHANT' ? 'REJECTED' : 'CANCELLED']
     );
+    if (!result.rows.length) throw new ConflictError('Order status changed; reload and retry', 'ORDER_CHANGED');
+    await client.query(`UPDATE inventory i SET quantity = i.quantity + oi.quantity, updated_at = NOW()
+      FROM order_items oi WHERE oi.order_id = $1 AND oi.product_id = i.product_id`, [id]);
+    await client.query("UPDATE deliveries SET status = 'FAILED', updated_at = NOW() WHERE order_id = $1 AND status = 'PENDING'", [id]);
+    await client.query("UPDATE payments SET status = CASE WHEN status = 'SUCCESS' THEN 'REFUNDED' ELSE 'FAILED' END, updated_at = NOW() WHERE order_id = $1", [id]);
     return mapOrderRow(result.rows[0]);
+    });
   }
 
   /**
@@ -167,10 +177,10 @@ export class OrdersRepository {
     const date = new Date();
     const dateStr = date.toISOString().slice(0, 10).replace(/-/g, '');
 
-    const result = await query<{ count: string }>(
-      `SELECT COUNT(*) as count FROM orders WHERE created_at::date = CURRENT_DATE`
+    const result = await query<{ seq: string }>(
+      "SELECT nextval('order_number_seq')::text as seq"
     );
-    const seq = (parseInt(result.rows[0].count, 10) + 1).toString().padStart(4, '0');
+    const seq = result.rows[0].seq.padStart(4, '0');
 
     return `TLB-${dateStr}-${seq}`;
   }

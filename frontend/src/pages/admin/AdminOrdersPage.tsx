@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { adminApi } from '../../lib/api';
 import {
   ShoppingBag, Search, Eye, ChevronLeft, ChevronRight, X,
-  Clock, MapPin, DollarSign
+  Clock, DollarSign
 } from 'lucide-react';
 import '../shared/Shared.css';
 
@@ -37,7 +37,7 @@ export default function AdminOrdersPage() {
       if (statusFilter !== 'ALL') params.status = statusFilter;
       const { data } = await adminApi.orders(params);
       setOrders(data.data || []);
-      setTotal(data.pagination?.total || data.data?.length || 0);
+      setTotal(data.meta?.total || data.data?.length || 0);
     } catch (err) {
       console.error(err);
     } finally {

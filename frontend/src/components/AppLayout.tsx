@@ -2,7 +2,7 @@ import { Outlet, Navigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { 
   LayoutDashboard, ShoppingBag, Store, Users, Truck, 
-  Settings, LogOut, Package, Bell, Menu, X,
+  Settings, LogOut, Package, Bell, Menu,
   FolderOpen, Briefcase, DollarSign, ClipboardList
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
@@ -32,6 +32,13 @@ export default function AppLayout() {
 
   if (!isAuthenticated) {
     return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  const requiredRole = location.pathname.startsWith('/admin/') ? 'ADMIN'
+    : location.pathname.startsWith('/merchant/') ? 'MERCHANT'
+    : location.pathname.startsWith('/driver/') ? 'DRIVER' : null;
+  if (requiredRole && !hasRole(requiredRole)) {
+    return <Navigate to="/dashboard" replace />;
   }
 
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);

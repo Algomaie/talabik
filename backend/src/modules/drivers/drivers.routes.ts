@@ -6,7 +6,7 @@ import { requireRoles } from '../../common/middleware/rbac.middleware';
 import { validate } from '../../common/middleware/validation.middleware';
 import { Role } from '../../common/constants/roles';
 import { sendSuccess } from '../../common/utils/response';
-import { NotFoundError, BusinessRuleError } from '../../common/errors';
+import { NotFoundError } from '../../common/errors';
 
 const router = Router();
 

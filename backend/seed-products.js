@@ -1,11 +1,10 @@
 const { Pool } = require('pg');
-const pool = new Pool({
-  user: 'postgres',
-  host: 'localhost',
-  database: 'talbak',
-  password: 'postgres123',
-  port: 5432,
-});
+require('dotenv').config({ path: require('path').join(__dirname, '.env') });
+if (process.env.NODE_ENV === 'production' || process.env.ALLOW_DEMO_SEED !== 'true') {
+  throw new Error('Demo seed requires ALLOW_DEMO_SEED=true and a non-production database');
+}
+if (!process.env.DATABASE_URL) throw new Error('DATABASE_URL is required');
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
 async function seed() {
   try {

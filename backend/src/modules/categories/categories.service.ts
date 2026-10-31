@@ -1,6 +1,6 @@
 import { query } from '../../config/database';
 import { storesRepository } from '../stores/stores.repository';
-import { NotFoundError, AuthorizationError, ConflictError } from '../../common/errors';
+import { NotFoundError, AuthorizationError } from '../../common/errors';
 import { logger } from '../../common/utils/logger';
 
 export interface Category {

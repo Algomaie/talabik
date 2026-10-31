@@ -1,206 +1,178 @@
-# Talbak — Full-Stack Delivery Platform
+# Talabak — Full-Stack Delivery Platform
 
-A production-grade delivery platform API built with **Node.js + TypeScript**, **PostgreSQL**, and **Redis**. Features a Modular Monolith architecture, role-based access control (RBAC), and full order lifecycle management.
+Talabak (named `talbak` in source packages) demonstrates **React + TypeScript**, a **Node.js / Express REST API**, and **PostgreSQL persistence**. Customers browse stores and place orders; merchants manage products and preparation; drivers handle deliveries; administrators manage accounts and statistics.
 
-## Tech Stack
+This is a portfolio implementation, not a production-readiness certification. Read the [technical audit](docs/TECHNICAL_AUDIT.md), [executed checks](docs/QUALITY_GATE.md), and [recruitment showcase](docs/RECRUITMENT_SHOWCASE.md). The Arabic offline form is a separate [assessment preparation exercise](docs/ASSESSMENT_PREPARATION.md), not a feature already implemented here.
 
-| Layer | Technology |
-|-------|-----------|
-| Runtime | Node.js 20+ / TypeScript 5 |
-| Framework | Express 4 |
-| Database | PostgreSQL 16 |
-| Cache | Redis 7 |
-| Auth | JWT (Access + Refresh) + Argon2id |
-| Validation | Zod |
-| Logging | Pino |
+## Implemented features
 
-## Getting Started
+- React Router, [AuthContext](frontend/src/context/AuthContext.tsx), role-aware layout and customer/merchant/driver/admin pages.
+- [StoresPage](frontend/src/pages/customer/StoresPage.tsx): REST loading, error/retry, successful results, search and empty states, with [interaction tests](frontend/tests/StoresPage.test.tsx).
+- JWT access/refresh authentication, Argon2 passwords, Zod validation, role and resource ownership checks.
+- PostgreSQL migrations, foreign keys, inventory constraints, connection pooling and transactions.
+- Checkout idempotency, conditional stock reservation and transactional cancellation/restocking.
+- Redis catalog caching, refresh session consumption, token revocation and rate limiting.
+- Vitest, React Testing Library, Supertest and real PostgreSQL integration tests.
 
-### Prerequisites
-- Node.js 20+
-- PostgreSQL 16+
-- Redis 7+
+## Tech stack
 
-### Setup
+| Layer | Locked versions during this review |
+| --- | --- |
+| Frontend | React 19.3, TypeScript 6.0, Vite 8.3, React Router 7.18, Axios 1.20 |
+| Backend | Express 4.22, TypeScript 5.9, Zod 4.6, pg 8.23, ioredis 5.11 |
+| Services | Compose: PostgreSQL 16 and Redis 7; local integration: PostgreSQL 18 |
+| Verification | Node 24.22, Vitest 3.2, Testing Library, Supertest, Oxlint |
 
-```bash
-# Clone and install
-cd backend
-npm install
+Exact versions are in package lockfiles. Use **Node 24 LTS** for this workflow; older Node versions have not been verified with the frontend toolchain.
 
-# Configure environment
+## Architecture
+
+```text
+React + Router + AuthContext
+          | Axios / JSON / Bearer JWT
+          v
+Express routes -> validation/auth/RBAC -> services -> repositories
+                                           |              |
+                                         Redis       PostgreSQL pool
+```
+
+## Project structure
+
+```text
+frontend/src/{components,context,lib,pages}  React application
+frontend/tests/                            DOM interaction tests
+backend/src/modules/                       Domain routes/services/repositories
+backend/src/common/                        Middleware/errors/utilities
+backend/src/database/migrations/           Ordered schema changes
+backend/src/database/seed.ts               Opt-in local demo data
+backend/tests/                             API/regression/integration tests
+docker-compose.yml                         Local PostgreSQL + Redis
+.github/workflows/ci.yml                    Build/types/lint/tests
+docs/                                      Audit, showcase and evidence
+```
+
+There is no root package.json, root tsconfig or application Dockerfile. Install/run frontend and backend separately.
+
+## Screenshots
+
+![Actual local login page](docs/screenshots/login.png)
+
+See [capture evidence and instructions](docs/screenshots/README.md). Images are actual application captures, not mockups; they do not certify every workflow.
+
+[Dashboard](docs/screenshots/dashboard.png) · [Products](docs/screenshots/products.png) · [Orders](docs/screenshots/orders.png) · [Admin users](docs/screenshots/admin-panel.png)
+
+## Local installation
+
+Prerequisites: Git, Node 24, npm and Docker Compose with a working engine, or separate PostgreSQL and Redis installations.
+
+```sh
+git clone https://github.com/Algomaie/talabak.git
+cd talabak
+npm ci --prefix backend
+npm ci --prefix frontend
 cp .env.example .env
-# Edit .env with your database credentials
-
-# Run migrations
-npm run migrate
-
-# Seed demo data
-npm run seed
-
-# Start development server
-npm run dev
+cp backend/.env.example backend/.env
+cp frontend/.env.example frontend/.env
 ```
 
-### Demo Accounts
-| Role | Email | Password |
-|------|-------|----------|
-| Admin | admin@talbak.com | Demo@1234 |
-| Merchant | merchant@talbak.com | Demo@1234 |
-| Driver | driver@talbak.com | Demo@1234 |
-| Customer | customer@talbak.com | Demo@1234 |
+PowerShell also supports `Copy-Item`. **Do not overwrite existing environment files.** Edit newly copied files:
 
-## API Endpoints
+| File / variable | Local value |
+| --- | --- |
+| Root `.env`: `POSTGRES_PASSWORD` | Your generated local password |
+| Backend `DATABASE_URL` | `postgresql://talbak:YOUR_URL_ENCODED_PASSWORD@localhost:5432/talbak` |
+| Backend `REDIS_URL` | `redis://localhost:6379` |
+| Backend `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET` | Two different random values, generated below |
+| Backend `CORS_ORIGIN` | `http://localhost:5173` |
+| Backend `PORT`, `NODE_ENV` | `5000`, `development` |
+| Frontend `VITE_API_URL` | `http://localhost:5000/api/v1` |
 
-### Auth (`/api/v1/auth`)
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| POST | /register | ✗ | Register (Customer/Merchant/Driver) |
-| POST | /login | ✗ | Login |
-| POST | /refresh | ✗ | Refresh token (rotation) |
-| POST | /logout | ✓ | Logout (blacklists token) |
-| GET | /me | ✓ | Current user profile |
-
-### Users (`/api/v1/users`)
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| GET | /profile | ✓ | Get profile |
-| PATCH | /profile | ✓ | Update profile |
-| PATCH | /password | ✓ | Change password |
-
-### Stores (`/api/v1/stores`)
-| Method | Path | Auth | Role | Description |
-|--------|------|------|------|-------------|
-| GET | / | ✗ | — | List active stores |
-| GET | /:id | ✗ | — | Store details |
-| GET | /my | ✓ | Merchant | My stores |
-| POST | / | ✓ | Merchant | Create store |
-| PATCH | /:id | ✓ | Merchant | Update store |
-
-### Products (`/api/v1/products`)
-| Method | Path | Auth | Role | Description |
-|--------|------|------|------|-------------|
-| GET | / | ✗ | — | List/search/filter products |
-| GET | /:id | ✗ | — | Product details |
-| POST | / | ✓ | Merchant | Create product |
-| PATCH | /:id | ✓ | Merchant | Update product |
-| PATCH | /:id/inventory | ✓ | Merchant | Update stock |
-| DELETE | /:id | ✓ | Merchant | Soft delete |
-
-### Categories (`/api/v1/categories`)
-| Method | Path | Auth | Role | Description |
-|--------|------|------|------|-------------|
-| GET | /stores/:storeId/categories | ✗ | — | Store categories |
-| POST | / | ✓ | Merchant | Create category |
-| PATCH | /:id | ✓ | Merchant | Update category |
-| DELETE | /:id | ✓ | Merchant | Delete category |
-
-### Cart (`/api/v1/cart`)
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| GET | / | ✓ | Get cart |
-| POST | /items | ✓ | Add item (single-store rule) |
-| PATCH | /items/:id | ✓ | Update quantity |
-| DELETE | /items/:id | ✓ | Remove item |
-| DELETE | / | ✓ | Clear cart |
-
-### Orders (`/api/v1/orders`)
-| Method | Path | Auth | Role | Description |
-|--------|------|------|------|-------------|
-| POST | / | ✓ | Customer | Create order (from cart) |
-| GET | / | ✓ | Any | List orders (role-aware) |
-| GET | /:id | ✓ | Any | Order details |
-| POST | /:id/cancel | ✓ | Customer | Cancel order |
-| POST | /:id/confirm | ✓ | Merchant | Confirm order |
-| POST | /:id/reject | ✓ | Merchant | Reject order |
-| PATCH | /:id/status | ✓ | Merchant | Update status |
-
-### Deliveries (`/api/v1/deliveries`)
-| Method | Path | Auth | Role | Description |
-|--------|------|------|------|-------------|
-| GET | /available | ✓ | Driver | Available deliveries |
-| POST | /:id/accept | ✓ | Driver | Accept delivery |
-| POST | /:id/pickup | ✓ | Driver | Confirm pickup |
-| PATCH | /:id/status | ✓ | Driver | Start transit |
-| PATCH | /:id/location | ✓ | Driver | Update location |
-| POST | /:id/complete | ✓ | Driver | Complete delivery |
-| GET | /history | ✓ | Driver | Delivery history |
-| GET | /earnings | ✓ | Driver | Earnings summary |
-
-### Admin (`/api/v1/admin`)
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | /dashboard | Platform statistics |
-| GET | /users | List all users |
-| PATCH | /users/:id/status | Activate/suspend user |
-| GET | /merchants | List merchants |
-| PATCH | /merchants/:id/status | Approve/suspend merchant |
-| GET | /drivers | List drivers |
-| PATCH | /drivers/:id/status | Approve/suspend driver |
-| GET | /orders | List all orders |
-| GET | /reports | Revenue & analytics |
-| GET | /audit-logs | Audit trail |
-
-### Other
-| Module | Endpoints |
-|--------|-----------|
-| Addresses | CRUD + set default |
-| Notifications | List, unread count, mark read |
-| Ratings | Rate store/driver, public reviews |
-| Drivers | Availability toggle, profile |
-
-## Architecture Highlights
-
-- **Modular Monolith** — isolated domain modules with clean boundaries
-- **10-Layer Security Pipeline** — Helmet, CORS, Rate Limiting, JWT, RBAC, Parameterized Queries
-- **Order State Machine** — enforced valid transitions (PENDING → CONFIRMED → PREPARING → ...)
-- **Transactional Order Creation** — cart → order → inventory → payment → delivery in one atomic transaction
-- **Cache-Aside Pattern** — Redis caching with proper invalidation on mutations
-- **Token Rotation** — refresh tokens are single-use, old tokens invalidated
-- **Idempotency** — duplicate order protection via Idempotency-Key header
-- **Atomic Driver Assignment** — SELECT FOR UPDATE prevents double-accept race conditions
-- **Graceful Shutdown** — SIGTERM/SIGINT handled with connection cleanup
-
-## Project Structure
-
-```
-backend/src/
-├── app.ts                          # Express bootstrap
-├── config/                         # Config + database pool
-├── redis/                          # Redis client + cache service
-├── common/
-│   ├── middleware/                  # Auth, RBAC, validation, rate limit, error handler
-│   ├── errors/                     # AppError hierarchy (7+ subclasses)
-│   ├── utils/                      # Response, pagination, logger
-│   └── constants/                  # Roles, order statuses (state machine), cache keys
-├── database/
-│   ├── migrations/                 # 10 migration files
-│   ├── migrate.ts                  # Migration runner
-│   └── seed.ts                     # Demo data seeder
-└── modules/
-    ├── auth/                       # Register, login, refresh, logout
-    ├── users/                      # Profile, password change
-    ├── stores/                     # CRUD with cache
-    ├── products/                   # CRUD + inventory + search/filter
-    ├── categories/                 # Store categories
-    ├── cart/                       # Single-store cart with stock validation
-    ├── orders/                     # Full order lifecycle
-    ├── deliveries/                 # Driver assignment + tracking
-    ├── drivers/                    # Availability + profile
-    ├── notifications/              # User notifications
-    ├── ratings/                    # Store/driver ratings
-    ├── addresses/                  # User addresses
-    └── admin/                      # Dashboard, reports, management
+```sh
+node -e "console.log(require('node:crypto').randomBytes(32).toString('hex'))"
+docker compose up -d
+npm run migrate --prefix backend
 ```
 
-## Scripts
+Run the random-value command separately for each secret. Compose binds services to loopback and preserves volumes. Changing its password variable does not change an existing database's password. Do not delete volumes to work around credentials.
 
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Start dev server (hot reload) |
-| `npm run build` | Compile TypeScript |
-| `npm start` | Run production build |
-| `npm run migrate` | Run migrations |
-| `npm run migrate:down` | Rollback migrations |
-| `npm run seed` | Seed demo data |
-| `npm test` | Run tests |
+Enable seed only for a disposable local database:
+
+```sh
+# bash
+ALLOW_DEMO_SEED=true npm run seed --prefix backend
+```
+
+```powershell
+# PowerShell
+$env:ALLOW_DEMO_SEED = 'true'
+npm run seed --prefix backend
+Remove-Item Env:ALLOW_DEMO_SEED
+```
+
+Run each in its own terminal:
+
+```sh
+npm run dev --prefix backend
+```
+
+```sh
+npm run dev --prefix frontend -- --port 5173 --strictPort
+```
+
+Open [frontend](http://localhost:5173) and [API health](http://localhost:5000/health). Health is process liveness, not service readiness. Keep hostname consistent: `localhost` and `127.0.0.1` are different CORS origins.
+
+## Local demo accounts
+
+Initial password: `Demo@1234`. These are public **local demo credentials**, never production credentials. Production rejects seed; frontend production builds hide demo shortcuts. Re-seeding preserves existing passwords and inventory, but maintains demo catalog/profile records: always use a dedicated demo database.
+
+| Role | Email | Try |
+| --- | --- | --- |
+| Customer | customer@talbak.com | Stores → products → cart → checkout → orders |
+| Merchant | merchant@talbak.com | Products and preparation |
+| Driver | driver@talbak.com | Deliveries and history |
+| Admin | admin@talbak.com | Dashboard and account management |
+
+## API documentation
+
+[API reference](docs/API_REFERENCE.md). Responses use `{ success, data }`; paginated responses put arrays in `data` and metadata in `meta`. Auth user fields are camelCase; some admin/delivery endpoints return snake_case. Source routes are authoritative. Swagger packages are installed, but no Swagger endpoint is mounted.
+
+## Automated testing
+
+```sh
+npm run typecheck --prefix frontend
+npm run lint --prefix frontend
+npm test --prefix frontend
+npm run build --prefix frontend
+npm run typecheck --prefix backend
+npm run lint --prefix backend
+npm test --prefix backend
+npm run build --prefix backend
+```
+
+For integration, create a separate database whose name ends in `_test`. Set both `DATABASE_URL` and `TEST_DATABASE_URL` to it, run migrations and demo seed, then:
+
+```sh
+npm run test:integration --prefix backend
+```
+
+Checkout tests use real PostgreSQL and explicitly mock Redis. Set `TEST_REDIS_URL` to a separate test Redis to run its session test; otherwise it is reported as skipped. Tests retain new test users/orders and never clean up existing data. [Quality evidence](docs/QUALITY_GATE.md) distinguishes executed checks from pending checks. CI provisions PostgreSQL/Redis; no hosted CI result is claimed before a push/run.
+
+## Build and deployment considerations
+
+```sh
+npm run build --prefix backend
+npm run build --prefix frontend
+npm start --prefix backend
+npm run preview --prefix frontend
+```
+
+Preview uses port 4173 by default; adjust backend CORS for that local origin. Deployment requires HTTPS, private service networking, generated secrets, SPA fallback for `frontend/dist`, and the correct build-time `VITE_API_URL`. No public deployment is provisioned here. Run migrations from source with `npm run migrate`; do not mix compiled/source migration names in an existing ledger.
+
+## Security, limitations and future improvements
+
+- No payment gateway is integrated. Cash/payment rows demonstrate the model; merchant confirmation does not prove payment collection.
+- Development can continue without Redis, but session refresh/revocation/rate limiting then lose their normal guarantees. Production startup requires Redis and security-store failures return 503.
+- Browser tokens use localStorage, so successful XSS can expose them. Cookie sessions need a separate design including CSRF handling.
+- Driver lifecycle concurrency, crash-safe migrations, broader browser tests and page error handling need further work; see the audit.
+- UI is currently English. Arabic RTL offline forms and IndexedDB synchronization are not implemented.
+- No production load result, public demo, SLA, personal contribution or fabricated history is asserted.

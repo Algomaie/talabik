@@ -1,4 +1,4 @@
-import { withTransaction } from '../../config/database';
+import { query, withTransaction } from '../../config/database';
 import { ordersRepository } from './orders.repository';
 import { cartService } from '../cart/cart.service';
 import { productsRepository } from '../products/products.repository';
@@ -36,15 +36,41 @@ export class OrdersService {
    * All within a single PostgreSQL transaction.
    */
   async createOrder(userId: string, dto: CreateOrderDto): Promise<Order> {
+    try {
+      return await this.createOrderAttempt(userId, dto);
+    } catch (error) {
+      // Resolve a replay even if its first read preceded the winner's commit and
+      // its later cart/stock validation observed the already-completed checkout.
+      if (dto.idempotencyKey) {
+        const existing = await ordersRepository.findByIdempotencyKey(dto.idempotencyKey);
+        if (existing) {
+          if (existing.userId !== userId || existing.addressId !== dto.addressId || (existing.notes ?? '') !== (dto.notes ?? '')) {
+            throw new ConflictError('Idempotency key already used for another request', 'IDEMPOTENCY_CONFLICT');
+          }
+          existing.items = await ordersRepository.getOrderItems(existing.id);
+          return existing;
+        }
+      }
+      throw error;
+    }
+  }
+
+  private async createOrderAttempt(userId: string, dto: CreateOrderDto): Promise<Order> {
     // Idempotency check
     if (dto.idempotencyKey) {
       const existing = await ordersRepository.findByIdempotencyKey(dto.idempotencyKey);
       if (existing) {
+        if (existing.userId !== userId || existing.addressId !== dto.addressId || (existing.notes ?? '') !== (dto.notes ?? '')) {
+          throw new ConflictError('Idempotency key already used for another request', 'IDEMPOTENCY_CONFLICT');
+        }
         logger.info({ idempotencyKey: dto.idempotencyKey }, 'Idempotent order returned');
         existing.items = await ordersRepository.getOrderItems(existing.id);
         return existing;
       }
     }
+
+    const address = await query('SELECT id FROM addresses WHERE id = $1 AND user_id = $2', [dto.addressId, userId]);
+    if (!address.rows.length) throw new NotFoundError('Address');
 
     // Get cart
     const cart = await cartService.getCart(userId);
@@ -58,6 +84,7 @@ export class OrdersService {
     // Get store for delivery fee
     const store = await storesRepository.findById(cart.storeId);
     if (!store) throw new NotFoundError('Store');
+    if (!store.isActive) throw new BusinessRuleError('Store is unavailable', 'STORE_UNAVAILABLE');
 
     // Check min order
     if (store.minOrder > 0 && cart.subtotal < store.minOrder) {
@@ -99,6 +126,20 @@ export class OrdersService {
 
     // Execute the entire order creation in a transaction
     const order = await withTransaction(async (client) => {
+      // Serialize checkout for this cart, including simultaneous requests without keys.
+      await client.query('SELECT id FROM carts WHERE id = $1 FOR UPDATE', [cart.id]);
+      const currentItems = await client.query('SELECT product_id, quantity FROM cart_items WHERE cart_id = $1 ORDER BY product_id FOR UPDATE', [cart.id]);
+      if (currentItems.rows.length !== cart.items.length || currentItems.rows.some((row) =>
+        !cart.items.some((item) => item.productId === row.product_id && item.quantity === row.quantity))) {
+        throw new ConflictError('Cart changed; reload before checkout', 'CART_CHANGED');
+      }
+      const currentProducts = await client.query(
+        'SELECT id, price, is_active, store_id FROM products WHERE id = ANY($1::uuid[]) FOR SHARE', [productIds]);
+      if (currentProducts.rows.length !== cart.items.length || currentProducts.rows.some((row) =>
+        !row.is_active || row.store_id !== cart.storeId ||
+        Number(row.price) !== cart.items.find(item => item.productId === row.id)?.productPrice)) {
+        throw new ConflictError('Products changed; reload the cart', 'CART_CHANGED');
+      }
       // 1. Create order
       const orderResult = await client.query(
         `INSERT INTO orders (order_number, user_id, store_id, address_id, status,
@@ -166,6 +207,14 @@ export class OrdersService {
       );
 
       return orderResult.rows[0];
+    }).catch(async (error) => {
+      // A competing request may have committed while this request waited on the cart.
+      if (dto.idempotencyKey) {
+        const existing = await ordersRepository.findByIdempotencyKey(dto.idempotencyKey);
+        if (existing && existing.userId === userId && existing.addressId === dto.addressId && (existing.notes ?? '') === (dto.notes ?? '')) return existing;
+        if (existing) throw new ConflictError('Idempotency key already used', 'IDEMPOTENCY_CONFLICT');
+      }
+      throw error;
     });
 
     // Store idempotency key in Redis
@@ -209,10 +258,15 @@ export class OrdersService {
       // Admin — full access
     } else if (userRoles?.includes('MERCHANT')) {
       const merchantId = await storesRepository.getMerchantIdByUserId(userId);
+      if (!merchantId) throw new AuthorizationError('Merchant profile required');
       if (merchantId) {
         const isOwner = await storesRepository.isOwnedByMerchant(order.storeId, merchantId);
         if (!isOwner) throw new AuthorizationError('Not your store order', 'RESOURCE_NOT_OWNED');
       }
+    } else if (userRoles?.includes('DRIVER')) {
+      const assigned = await query(`SELECT d.id FROM deliveries d JOIN drivers dr ON dr.id = d.driver_id
+        WHERE d.order_id = $1 AND dr.user_id = $2`, [orderId, userId]);
+      if (!assigned.rows.length) throw new AuthorizationError('Not your delivery', 'RESOURCE_NOT_OWNED');
     } else if (order.userId !== userId) {
       throw new AuthorizationError('Not your order', 'RESOURCE_NOT_OWNED');
     }
@@ -249,10 +303,7 @@ export class OrdersService {
     const order = await this.verifyMerchantAccess(userId, orderId);
     this.validateTransition(order.status, OrderStatus.CONFIRMED);
 
-    const updated = await ordersRepository.updateStatus(orderId, OrderStatus.CONFIRMED, 'confirmed_at');
-
-    // Update payment to SUCCESS (mock)
-    await this.mockPaymentSuccess(orderId);
+    const updated = await ordersRepository.updateStatus(orderId, OrderStatus.CONFIRMED, 'confirmed_at', order.status);
 
     logger.info({ orderId, from: order.status, to: OrderStatus.CONFIRMED }, 'Order confirmed');
     updated.items = await ordersRepository.getOrderItems(orderId);
@@ -266,10 +317,8 @@ export class OrdersService {
     const order = await this.verifyMerchantAccess(userId, orderId);
     this.validateTransition(order.status, OrderStatus.REJECTED);
 
-    const updated = await ordersRepository.cancelOrder(orderId, 'MERCHANT', reason);
-
-    // Restore inventory
-    await this.restoreInventory(orderId);
+    const updated = await ordersRepository.cancelOrder(orderId, 'MERCHANT', reason, order.status);
+    await this.invalidateInventory(orderId, order.storeId);
 
     logger.info({ orderId }, 'Order rejected');
     updated.items = await ordersRepository.getOrderItems(orderId);
@@ -284,7 +333,7 @@ export class OrdersService {
     this.validateTransition(order.status, newStatus as OrderStatus);
 
     const timestampField = STATUS_TIMESTAMP_MAP[newStatus];
-    const updated = await ordersRepository.updateStatus(orderId, newStatus, timestampField);
+    const updated = await ordersRepository.updateStatus(orderId, newStatus, timestampField, order.status);
 
     logger.info({ orderId, from: order.status, to: newStatus }, 'Order status updated');
     updated.items = await ordersRepository.getOrderItems(orderId);
@@ -311,10 +360,8 @@ export class OrdersService {
 
     this.validateTransition(order.status, OrderStatus.CANCELLED);
 
-    const updated = await ordersRepository.cancelOrder(orderId, 'CUSTOMER', reason);
-
-    // Restore inventory
-    await this.restoreInventory(orderId);
+    const updated = await ordersRepository.cancelOrder(orderId, 'CUSTOMER', reason, order.status);
+    await this.invalidateInventory(orderId, order.storeId);
 
     logger.info({ orderId, userId }, 'Order cancelled by customer');
     updated.items = await ordersRepository.getOrderItems(orderId);
@@ -345,31 +392,12 @@ export class OrdersService {
     return order;
   }
 
-  private async restoreInventory(orderId: string): Promise<void> {
+  private async invalidateInventory(orderId: string, storeId: string): Promise<void> {
     const items = await ordersRepository.getOrderItems(orderId);
     for (const item of items) {
-      await productsRepository.updateInventory(
-        item.productId,
-        -1, // Will be added, not set — need to use raw query
-      );
+      await cacheService.del(CacheKeys.product(item.productId));
     }
-    // Actually, let's do it properly with increment
-    const { query: dbQuery } = await import('../../config/database');
-    for (const item of items) {
-      await dbQuery(
-        'UPDATE inventory SET quantity = quantity + $1, updated_at = NOW() WHERE product_id = $2',
-        [item.quantity, item.productId]
-      );
-    }
-  }
-
-  private async mockPaymentSuccess(orderId: string): Promise<void> {
-    const { query: dbQuery } = await import('../../config/database');
-    await dbQuery(
-      `UPDATE payments SET status = 'SUCCESS', paid_at = NOW(), transaction_id = $1, updated_at = NOW()
-       WHERE order_id = $2`,
-      [`mock_txn_${Date.now()}`, orderId]
-    );
+    await cacheService.delPattern(`products:store:${storeId}:*`);
   }
 }
 

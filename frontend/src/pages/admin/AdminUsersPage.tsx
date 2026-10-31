@@ -36,7 +36,7 @@ export default function AdminUsersPage() {
       if (roleFilter !== 'ALL') params.role = roleFilter;
       const { data } = await adminApi.users(params);
       setUsers(data.data || []);
-      setTotal(data.pagination?.total || data.data?.length || 0);
+      setTotal(data.meta?.total || data.data?.length || 0);
     } catch (err) {
       console.error(err);
     } finally {

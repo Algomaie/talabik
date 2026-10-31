@@ -28,8 +28,10 @@ router.post(
 
       // Verify user placed this order
       const orderCheck = await query(
-        `SELECT id FROM orders WHERE id = $1 AND user_id = $2 AND status = 'DELIVERED'`,
-        [orderId, req.user!.id]
+        `SELECT o.id FROM orders o LEFT JOIN deliveries d ON d.order_id = o.id
+         WHERE o.id = $1 AND o.user_id = $2 AND o.status = 'DELIVERED'
+         AND (($3 = 'ORDER' AND o.id = $4) OR ($3 = 'STORE' AND o.store_id = $4) OR ($3 = 'DRIVER' AND d.driver_id = $4))`,
+        [orderId, req.user!.id, targetType, targetId]
       );
       if (orderCheck.rows.length === 0) {
         throw new BusinessRuleError(

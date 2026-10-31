@@ -15,6 +15,10 @@ router.post(
   '/',
   authMiddleware,
   requireRoles(Role.CUSTOMER),
+  (req, _res, next) => {
+    if (req.headers['idempotency-key'] !== undefined) req.body.idempotencyKey = req.headers['idempotency-key'];
+    next();
+  },
   validate(createOrderSchema),
   async (req: Request, res: Response, next: NextFunction) => {
     try {

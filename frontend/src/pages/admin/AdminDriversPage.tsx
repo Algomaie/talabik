@@ -25,7 +25,7 @@ export default function AdminDriversPage() {
       if (statusFilter !== 'ALL') params.status = statusFilter;
       const { data } = await adminApi.drivers(params);
       setDrivers(data.data || []);
-      setTotal(data.pagination?.total || data.data?.length || 0);
+      setTotal(data.meta?.total || data.data?.length || 0);
     } catch (err) {
       console.error(err);
     } finally {

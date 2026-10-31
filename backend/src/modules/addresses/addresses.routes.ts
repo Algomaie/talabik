@@ -5,7 +5,6 @@ import { authMiddleware } from '../../common/middleware/auth.middleware';
 import { validate } from '../../common/middleware/validation.middleware';
 import { sendSuccess } from '../../common/utils/response';
 import { NotFoundError } from '../../common/errors';
-import { logger } from '../../common/utils/logger';
 
 // ─── Types ───────────────────────────────────────────────────────
 

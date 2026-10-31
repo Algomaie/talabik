@@ -1,7 +1,6 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
 import { query, withTransaction } from '../../config/database';
-import { ordersRepository } from '../orders/orders.repository';
 import { authMiddleware } from '../../common/middleware/auth.middleware';
 import { requireRoles } from '../../common/middleware/rbac.middleware';
 import { validate } from '../../common/middleware/validation.middleware';
@@ -9,7 +8,6 @@ import { Role } from '../../common/constants/roles';
 import { sendSuccess, sendPaginated } from '../../common/utils/response';
 import { parsePagination } from '../../common/utils/pagination';
 import { NotFoundError, BusinessRuleError, ConflictError } from '../../common/errors';
-import { OrderStatus, isValidTransition } from '../../common/constants/order-statuses';
 import { logger } from '../../common/utils/logger';
 
 // ─── Validation ──────────────────────────────────────────────────
@@ -23,7 +21,7 @@ const updateLocationSchema = z.object({
 
 async function getDriverId(userId: string): Promise<string> {
   const result = await query<{ id: string }>(
-    'SELECT id FROM drivers WHERE user_id = $1',
+    "SELECT id FROM drivers WHERE user_id = $1 AND status = 'APPROVED'",
     [userId]
   );
   if (result.rows.length === 0) throw new NotFoundError('Driver profile');
@@ -78,13 +76,13 @@ router.post(
       const deliveryId = req.params.id;
 
       // Atomic acceptance — prevents double-accept via WHERE clause
-      const result = await withTransaction(async (client) => {
+      await withTransaction(async (client) => {
         // Lock the delivery row and check it's still available
         const lockResult = await client.query(
           `SELECT d.*, o.id as order_id, o.status as order_status
            FROM deliveries d
            JOIN orders o ON d.order_id = o.id
-           WHERE d.id = $1 AND d.status = 'PENDING' AND d.driver_id IS NULL
+           WHERE d.id = $1 AND d.status = 'PENDING' AND d.driver_id IS NULL AND o.status = 'READY_FOR_PICKUP'
            FOR UPDATE`,
           [deliveryId]
         );
@@ -144,17 +142,20 @@ router.post(
         throw new BusinessRuleError('Can only pickup assigned deliveries', 'INVALID_STATUS_TRANSITION');
       }
 
-      await query(
+      await withTransaction(async (client) => {
+      const updated = await client.query(
         `UPDATE deliveries SET status = 'PICKED_UP', picked_up_at = NOW(), updated_at = NOW()
-         WHERE id = $1`,
-        [req.params.id]
+         WHERE id = $1 AND driver_id = $2 AND status = 'ASSIGNED' RETURNING id`,
+        [req.params.id, driverId]
       );
+      if (!updated.rows.length) throw new ConflictError('Delivery changed; reload and retry');
 
-      await query(
+      await client.query(
         `UPDATE orders SET status = 'PICKED_UP', picked_up_at = NOW(), updated_at = NOW()
          WHERE id = $1`,
         [delivery.rows[0].order_id]
       );
+      });
 
       logger.info({ deliveryId: req.params.id }, 'Order picked up');
       sendSuccess(res, { message: 'Pickup confirmed' });
@@ -180,15 +181,18 @@ router.patch(
         throw new BusinessRuleError('Can only start transit after pickup', 'INVALID_STATUS_TRANSITION');
       }
 
-      await query(
-        `UPDATE deliveries SET status = 'IN_TRANSIT', updated_at = NOW() WHERE id = $1`,
-        [req.params.id]
+      await withTransaction(async (client) => {
+      const updated = await client.query(
+        `UPDATE deliveries SET status = 'IN_TRANSIT', updated_at = NOW() WHERE id = $1 AND driver_id = $2 AND status = 'PICKED_UP' RETURNING id`,
+        [req.params.id, driverId]
       );
+      if (!updated.rows.length) throw new ConflictError('Delivery changed; reload and retry');
 
-      await query(
+      await client.query(
         `UPDATE orders SET status = 'OUT_FOR_DELIVERY', updated_at = NOW() WHERE id = $1`,
         [delivery.rows[0].order_id]
       );
+      });
 
       logger.info({ deliveryId: req.params.id }, 'Out for delivery');
       sendSuccess(res, { message: 'Out for delivery' });
@@ -246,11 +250,12 @@ router.post(
 
       await withTransaction(async (client) => {
         // Complete delivery
-        await client.query(
+        const completed = await client.query(
           `UPDATE deliveries SET status = 'DELIVERED', delivered_at = NOW(), updated_at = NOW()
-           WHERE id = $1`,
-          [req.params.id]
+           WHERE id = $1 AND driver_id = $2 AND status = 'IN_TRANSIT' RETURNING id`,
+          [req.params.id, driverId]
         );
+        if (!completed.rows.length) throw new ConflictError('Delivery already completed or changed');
 
         // Complete order
         await client.query(

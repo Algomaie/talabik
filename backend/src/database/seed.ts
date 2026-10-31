@@ -1,12 +1,16 @@
-import { query, withTransaction } from '../config/database';
+import { withTransaction } from '../config/database';
 import { logger } from '../common/utils/logger';
 import argon2 from 'argon2';
+import { config } from '../config';
 
 /**
  * Seeds the database with demo data.
  * Idempotent — safe to run multiple times.
  */
 async function seed(): Promise<void> {
+  if (config.isProduction || process.env.ALLOW_DEMO_SEED !== 'true') {
+    throw new Error('Demo seed requires ALLOW_DEMO_SEED=true and a non-production database');
+  }
   logger.info('Starting database seed...');
 
   const password = await argon2.hash('Demo@1234', {
@@ -87,7 +91,7 @@ async function seed(): Promise<void> {
     const adminResult = await client.query(`
       INSERT INTO users (email, password_hash, first_name, last_name, phone, is_active, email_verified)
       VALUES ('admin@talbak.com', $1, 'Admin', 'Talbak', '+966500000001', true, true)
-      ON CONFLICT (email) DO UPDATE SET password_hash = $1
+      ON CONFLICT (email) DO UPDATE SET email = users.email
       RETURNING id
     `, [password]);
     const adminId = adminResult.rows[0].id;
@@ -103,7 +107,7 @@ async function seed(): Promise<void> {
     const merchantUserResult = await client.query(`
       INSERT INTO users (email, password_hash, first_name, last_name, phone, is_active, email_verified)
       VALUES ('merchant@talbak.com', $1, 'Ahmad', 'Al-Merchant', '+966500000002', true, true)
-      ON CONFLICT (email) DO UPDATE SET password_hash = $1
+      ON CONFLICT (email) DO UPDATE SET email = users.email
       RETURNING id
     `, [password]);
     const merchantUserId = merchantUserResult.rows[0].id;
@@ -183,7 +187,7 @@ async function seed(): Promise<void> {
       await client.query(`
         INSERT INTO inventory (product_id, quantity, low_stock)
         VALUES ($1, 50, 5)
-        ON CONFLICT (product_id) DO UPDATE SET quantity = 50
+        ON CONFLICT (product_id) DO NOTHING
       `, [prodResult.rows[0].id]);
     }
 
@@ -192,7 +196,7 @@ async function seed(): Promise<void> {
     const driverUserResult = await client.query(`
       INSERT INTO users (email, password_hash, first_name, last_name, phone, is_active, email_verified)
       VALUES ('driver@talbak.com', $1, 'Khalid', 'Al-Driver', '+966500000003', true, true)
-      ON CONFLICT (email) DO UPDATE SET password_hash = $1
+      ON CONFLICT (email) DO UPDATE SET email = users.email
       RETURNING id
     `, [password]);
     const driverUserId = driverUserResult.rows[0].id;
@@ -215,7 +219,7 @@ async function seed(): Promise<void> {
     const customerUserResult = await client.query(`
       INSERT INTO users (email, password_hash, first_name, last_name, phone, is_active, email_verified)
       VALUES ('customer@talbak.com', $1, 'Sara', 'Al-Customer', '+966500000004', true, true)
-      ON CONFLICT (email) DO UPDATE SET password_hash = $1
+      ON CONFLICT (email) DO UPDATE SET email = users.email
       RETURNING id
     `, [password]);
     const customerUserId = customerUserResult.rows[0].id;
@@ -229,8 +233,8 @@ async function seed(): Promise<void> {
     // Customer address
     await client.query(`
       INSERT INTO addresses (user_id, label, address_line, city, area, latitude, longitude, is_default)
-      VALUES ($1, 'Home', '456 Residential Street, Al Olaya', 'Riyadh', 'Al Olaya', 24.7000, 46.6800, true)
-      ON CONFLICT DO NOTHING
+      SELECT $1, 'Home', '456 Residential Street, Al Olaya', 'Riyadh', 'Al Olaya', 24.7000, 46.6800, true
+      WHERE NOT EXISTS (SELECT 1 FROM addresses WHERE user_id = $1 AND label = 'Home')
     `, [customerUserId]);
   });
 

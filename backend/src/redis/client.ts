@@ -8,6 +8,7 @@ export function getRedisClient(): Redis {
   if (!redis) {
     redis = new Redis(config.redis.url, {
       maxRetriesPerRequest: 3,
+      enableOfflineQueue: false,
       retryStrategy(times) {
         const delay = Math.min(times * 200, 5000);
         logger.warn({ attempt: times, delay }, 'Redis reconnection attempt');
@@ -40,6 +41,7 @@ export async function connectRedis(): Promise<void> {
     logger.info('Redis connection verified');
   } catch (error) {
     logger.error({ error }, 'Redis connection failed');
+    if (config.isProduction) throw error;
     // Redis failure is non-fatal — app can work without it (degraded mode)
     logger.warn('Application will continue without Redis (degraded mode)');
   }

@@ -14,7 +14,7 @@ export class StoresService {
     // Only cache non-search requests
     if (!search) {
       const cached = await cacheService.get<{ stores: Store[]; total: number }>(
-        CacheKeys.storesList(page)
+        CacheKeys.storesList(page, limit)
       );
       if (cached) return cached;
     }
@@ -23,7 +23,7 @@ export class StoresService {
 
     // Cache the result
     if (!search) {
-      await cacheService.set(CacheKeys.storesList(page), result, CacheTTL.STORE_LIST);
+      await cacheService.set(CacheKeys.storesList(page, limit), result, CacheTTL.STORE_LIST);
     }
 
     return result;

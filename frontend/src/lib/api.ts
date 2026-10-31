@@ -18,19 +18,26 @@ api.interceptors.request.use((config) => {
 });
 
 // Auto-refresh on 401
+let refreshRequest: Promise<string> | null = null;
 api.interceptors.response.use(
   (res) => res,
   async (error) => {
     const original = error.config;
-    if (error.response?.status === 401 && !original._retry) {
+    const isLogin = /\/auth\/(login|register|refresh)$/.test(original?.url || '');
+    if (error.response?.status === 401 && original && !original._retry && !isLogin) {
       original._retry = true;
       try {
-        const refreshToken = localStorage.getItem('refreshToken');
-        if (!refreshToken) throw new Error('No refresh token');
-        const { data } = await axios.post(`${API_BASE}/auth/refresh`, { refreshToken });
-        localStorage.setItem('accessToken', data.data.accessToken);
-        localStorage.setItem('refreshToken', data.data.refreshToken);
-        original.headers.Authorization = `Bearer ${data.data.accessToken}`;
+        if (!refreshRequest) {
+          refreshRequest = (async () => {
+            const refreshToken = localStorage.getItem('refreshToken');
+            if (!refreshToken) throw new Error('No refresh token');
+            const { data } = await axios.post(`${API_BASE}/auth/refresh`, { refreshToken });
+            localStorage.setItem('accessToken', data.data.accessToken);
+            localStorage.setItem('refreshToken', data.data.refreshToken);
+            return data.data.accessToken as string;
+          })().finally(() => { refreshRequest = null; });
+        }
+        original.headers.Authorization = `Bearer ${await refreshRequest}`;
         return api(original);
       } catch {
         localStorage.removeItem('accessToken');
@@ -69,6 +76,7 @@ export const productsApi = {
   getById: (id: string) => api.get(`/products/${id}`),
   create: (data: Record<string, any>) => api.post('/products', data),
   update: (id: string, data: Record<string, any>) => api.patch(`/products/${id}`, data),
+  delete: (id: string) => api.delete(`/products/${id}`),
 };
 
 // ─── Categories ──────────────────────────────────────────────────
@@ -89,8 +97,8 @@ export const cartApi = {
 
 // ─── Orders ──────────────────────────────────────────────────────
 export const ordersApi = {
-  create: (addressId: string, notes?: string) =>
-    api.post('/orders', { addressId, notes }),
+  create: (addressId: string, notes?: string, idempotencyKey?: string) =>
+    api.post('/orders', { addressId, notes }, { headers: idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : {} }),
   list: (params: Record<string, any> = {}) =>
     api.get('/orders', { params }),
   getById: (id: string) => api.get(`/orders/${id}`),
@@ -127,6 +135,7 @@ export const deliveriesApi = {
     api.get('/deliveries/available', { params }),
   accept: (id: string) => api.post(`/deliveries/${id}/accept`),
   pickup: (id: string) => api.post(`/deliveries/${id}/pickup`),
+  startTransit: (id: string) => api.patch(`/deliveries/${id}/status`),
   updateLocation: (id: string, lat: number, lng: number) =>
     api.patch(`/deliveries/${id}/location`, { latitude: lat, longitude: lng }),
   complete: (id: string) => api.post(`/deliveries/${id}/complete`),

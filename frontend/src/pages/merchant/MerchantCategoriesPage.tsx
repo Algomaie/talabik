@@ -25,8 +25,8 @@ export default function MerchantCategoriesPage() {
   const loadStore = async () => {
     try {
       const { data } = await storesApi.myStores();
-      if (data.data && data.data.length > 0) {
-        const sid = data.data[0].id;
+      if (data.data?.stores?.length > 0) {
+        const sid = data.data.stores[0].id;
         setStoreId(sid);
         await loadCategories(sid);
       }
@@ -40,7 +40,7 @@ export default function MerchantCategoriesPage() {
   const loadCategories = async (sid: string) => {
     try {
       const { data } = await categoriesApi.listByStore(sid);
-      setCategories(data.data || []);
+      setCategories(data.data?.categories || []);
     } catch (err) {
       console.error(err);
     }
@@ -79,7 +79,7 @@ export default function MerchantCategoriesPage() {
       } else {
         const { api } = await import('../../lib/api');
         const { data } = await api.post('/categories', payload);
-        setCategories((prev) => [...prev, data.data]);
+        setCategories((prev) => [...prev, data.data.category]);
       }
       setShowModal(false);
     } catch (err: any) {

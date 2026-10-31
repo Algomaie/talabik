@@ -3,7 +3,7 @@ import { z } from 'zod';
 export const createOrderSchema = z.object({
   addressId: z.string().uuid('Invalid address ID'),
   notes: z.string().max(500).optional(),
-  idempotencyKey: z.string().max(255).optional(),
+  idempotencyKey: z.string().min(1).max(255).optional(),
 });
 
 export const cancelOrderSchema = z.object({

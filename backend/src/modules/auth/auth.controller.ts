@@ -3,7 +3,6 @@ import { authService } from './auth.service';
 import { sendSuccess } from '../../common/utils/response';
 import { RegisterDto, LoginDto } from './auth.types';
 import jwt from 'jsonwebtoken';
-import { config } from '../../config';
 
 /**
  * Auth controller — handles HTTP concerns only.

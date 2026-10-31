@@ -37,8 +37,8 @@ app.use(cors({
 }));
 
 // ─── Body Parsing ────────────────────────────────────────────────
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(express.json({ limit: '100kb' }));
+app.use(express.urlencoded({ extended: true, limit: '100kb' }));
 
 // ─── Request Tracing ─────────────────────────────────────────────
 app.use(requestIdMiddleware);
@@ -147,6 +147,6 @@ async function startServer(): Promise<void> {
   }
 }
 
-startServer();
+if (require.main === module) startServer();
 
 export default app;

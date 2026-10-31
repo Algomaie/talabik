@@ -1,32 +1,28 @@
-# React + TypeScript + Vite
+# Talabak React frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+React + TypeScript + Vite, React Router, Axios and AuthContext. Customer, merchant, driver and admin pages share a role-aware layout; server authorization remains authoritative.
 
-Currently, two official plugins are available:
+From repository root:
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```sh
+npm ci --prefix frontend
+cp frontend/.env.example frontend/.env
+npm run dev --prefix frontend -- --port 5173 --strictPort
+npm test --prefix frontend
+npm run typecheck --prefix frontend
+npm run lint --prefix frontend
+npm run build --prefix frontend
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+Set `VITE_API_URL` before building. Backend `CORS_ORIGIN` must match the frontend URL. Follow [root setup](../README.md) for services, migrations and local accounts.
+
+## Review entry points
+
+- [StoresPage](src/pages/customer/StoresPage.tsx): REST loading, error/retry, success, filtering and empty states.
+- [Stores tests](tests/StoresPage.test.tsx): DOM interactions with a mocked API boundary.
+- [LoginPage](src/pages/auth/LoginPage.tsx), [auth tests](tests/Auth.test.tsx): form input, server errors, camelCase user contract.
+- [AuthContext](src/context/AuthContext.tsx), [API client](src/lib/api.ts): session state and shared refresh request.
+- [AppLayout](src/components/AppLayout.tsx): login and role guards, navigation and responsive sidebar.
+- [Dashboard](src/pages/dashboard/DashboardPage.tsx), [Products](src/pages/merchant/MerchantProductsPage.tsx), [Orders](src/pages/customer/CustomerOrdersPage.tsx), [Admin users](src/pages/admin/AdminUsersPage.tsx).
+
+Tests use jsdom/Vitest/Testing Library; they are not browser-to-database end-to-end tests. Hook warnings and API-shape limitations are documented in the [audit](../docs/TECHNICAL_AUDIT.md). UI is English; there is no offline synchronization implementation.

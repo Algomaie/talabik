@@ -26,3 +26,6 @@ coverage/
 
 # Build
 *.tsbuildinfo
+
+# Isolated local verification services
+.local/

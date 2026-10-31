@@ -6,6 +6,8 @@ import { Role } from '../../common/constants/roles';
 import { sendSuccess, sendPaginated } from '../../common/utils/response';
 import { parsePagination } from '../../common/utils/pagination';
 import { NotFoundError } from '../../common/errors';
+import { z } from 'zod';
+import { validate } from '../../common/middleware/validation.middleware';
 
 const router = Router();
 
@@ -74,7 +76,7 @@ router.get('/users', async (req: Request, res: Response, next: NextFunction) => 
 });
 
 /** PATCH /api/v1/admin/users/:id/status — Activate/suspend user */
-router.patch('/users/:id/status', async (req: Request, res: Response, next: NextFunction) => {
+router.patch('/users/:id/status', validate(z.object({ isActive: z.boolean() })), async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { isActive } = req.body;
     const result = await query(
@@ -108,7 +110,7 @@ router.get('/merchants', async (req: Request, res: Response, next: NextFunction)
 });
 
 /** PATCH /api/v1/admin/merchants/:id/status — Approve/suspend merchant */
-router.patch('/merchants/:id/status', async (req: Request, res: Response, next: NextFunction) => {
+router.patch('/merchants/:id/status', validate(z.object({ status: z.enum(['PENDING', 'APPROVED', 'REJECTED', 'SUSPENDED']) })), async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { status } = req.body;
     const result = await query(
@@ -143,7 +145,7 @@ router.get('/drivers', async (req: Request, res: Response, next: NextFunction) =
 });
 
 /** PATCH /api/v1/admin/drivers/:id/status — Approve/suspend driver */
-router.patch('/drivers/:id/status', async (req: Request, res: Response, next: NextFunction) => {
+router.patch('/drivers/:id/status', validate(z.object({ status: z.enum(['PENDING', 'APPROVED', 'SUSPENDED']) })), async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { status } = req.body;
     const result = await query(

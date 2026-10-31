@@ -1,4 +1,4 @@
-import { pool, query } from '../config/database';
+import { query } from '../config/database';
 import { logger } from '../common/utils/logger';
 import path from 'path';
 import fs from 'fs';
@@ -29,7 +29,7 @@ async function getAppliedMigrations(): Promise<string[]> {
 async function getMigrationFiles(): Promise<string[]> {
   const migrationsDir = path.resolve(__dirname, 'migrations');
   const files = fs.readdirSync(migrationsDir)
-    .filter((f) => f.endsWith('.ts') || f.endsWith('.js'))
+    .filter((f) => !f.endsWith('.d.ts') && (f.endsWith('.ts') || f.endsWith('.js')))
     .sort();
   return files;
 }
@@ -46,7 +46,8 @@ async function runMigrations(direction: 'up' | 'down' = 'up'): Promise<void> {
   const files = await getMigrationFiles();
 
   if (direction === 'up') {
-    const pending = files.filter((f) => !applied.includes(f));
+    const normalized = (name: string) => name.replace(/\.(ts|js)$/, '');
+    const pending = files.filter((f) => !applied.some(name => normalized(name) === normalized(f)));
 
     if (pending.length === 0) {
       logger.info('No pending migrations');
@@ -74,7 +75,9 @@ async function runMigrations(direction: 'up' | 'down' = 'up'): Promise<void> {
     const lastApplied = applied[applied.length - 1];
     logger.info({ migration: lastApplied }, 'Rolling back migration');
 
-    const migrationPath = path.resolve(__dirname, 'migrations', lastApplied);
+    const currentFile = files.find(file => file.replace(/\.(ts|js)$/, '') === lastApplied.replace(/\.(ts|js)$/, ''));
+    if (!currentFile) throw new Error(`Migration file missing for ${lastApplied}`);
+    const migrationPath = path.resolve(__dirname, 'migrations', currentFile);
     const migration: Migration = require(migrationPath);
 
     await migration.down();
@@ -86,7 +89,7 @@ async function runMigrations(direction: 'up' | 'down' = 'up'): Promise<void> {
 // CLI entry point
 const direction = process.argv[2] === 'down' ? 'down' : 'up';
 
-runMigrations(direction)
+if (require.main === module) runMigrations(direction)
   .then(() => {
     logger.info('Migration process complete');
     process.exit(0);

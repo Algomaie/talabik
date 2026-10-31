@@ -5,7 +5,7 @@ dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
 function requireEnv(key: string, fallback?: string): string {
   const value = process.env[key] ?? fallback;
-  if (value === undefined) {
+  if (value === undefined || value.trim() === '') {
     throw new Error(`Missing required environment variable: ${key}`);
   }
   return value;
@@ -34,7 +34,7 @@ export const config = {
   },
 
   cors: {
-    origin: requireEnv('CORS_ORIGIN', 'http://localhost:3000'),
+    origin: requireEnv('CORS_ORIGIN', 'http://localhost:5173'),
   },
 
   rateLimit: {
@@ -48,3 +48,14 @@ export const config = {
     level: requireEnv('LOG_LEVEL', 'info'),
   },
 } as const;
+
+if (config.isProduction) {
+  for (const secret of [config.jwt.accessSecret, config.jwt.refreshSecret]) {
+    if (secret.length < 32 || /your-|change-in-production|demo/i.test(secret)) {
+      throw new Error('Production JWT secrets must be independently generated, at least 32 characters');
+    }
+  }
+  if (config.jwt.accessSecret === config.jwt.refreshSecret) {
+    throw new Error('Access and refresh secrets must differ');
+  }
+}

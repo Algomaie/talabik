@@ -17,6 +17,16 @@ export function errorHandler(
 ): void {
   // Prevent double-sending if headers already sent
   if (res.headersSent) {
+    return _next(err);
+  }
+
+  const parserError = err as Error & { type?: string };
+  if (parserError.type === 'entity.parse.failed') {
+    sendError(res, 400, 'INVALID_JSON', 'Request body must be valid JSON');
+    return;
+  }
+  if (parserError.type === 'entity.too.large') {
+    sendError(res, 413, 'PAYLOAD_TOO_LARGE', 'Request body is too large');
     return;
   }
 

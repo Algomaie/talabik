@@ -4,6 +4,7 @@ import { config } from '../../config';
 import { AuthenticationError } from '../errors';
 import { cacheService } from '../../redis/cache.service';
 import { CacheKeys } from '../constants/cache-keys';
+import { authRepository } from '../../modules/auth/auth.repository';
 
 export interface JwtPayload {
   sub: string;       // user ID
@@ -67,11 +68,16 @@ export async function authMiddleware(
       throw new AuthenticationError('Token has been revoked', 'TOKEN_REVOKED');
     }
 
+    const currentUser = await authRepository.findById(payload.sub);
+    if (!currentUser || !currentUser.isActive) {
+      throw new AuthenticationError('Account is unavailable', 'ACCOUNT_UNAVAILABLE');
+    }
+
     // Attach user info to request
     req.user = {
       id: payload.sub,
       email: payload.email,
-      roles: payload.roles,
+      roles: currentUser.roles,
       tokenId: payload.jti,
     };
 

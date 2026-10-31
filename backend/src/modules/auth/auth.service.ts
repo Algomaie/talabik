@@ -11,7 +11,7 @@ import {
   BusinessRuleError,
 } from '../../common/errors';
 import { cacheService } from '../../redis/cache.service';
-import { CacheKeys, CacheTTL } from '../../common/constants/cache-keys';
+import { CacheKeys } from '../../common/constants/cache-keys';
 import { logger } from '../../common/utils/logger';
 
 export class AuthService {
@@ -138,16 +138,13 @@ export class AuthService {
     }
 
     // Check if refresh token exists in Redis
-    const storedToken = await cacheService.get<string>(
+    const storedToken = await cacheService.consume<string>(
       CacheKeys.refreshToken(payload.sub, payload.jti)
     );
     if (!storedToken) {
       // Token was revoked or doesn't exist
       throw new AuthenticationError('Refresh token has been revoked', 'REFRESH_TOKEN_REVOKED');
     }
-
-    // Delete old refresh token (rotation)
-    await cacheService.del(CacheKeys.refreshToken(payload.sub, payload.jti));
 
     // Fetch user to get current roles
     const user = await authRepository.findById(payload.sub);
@@ -232,7 +229,7 @@ export class AuthService {
     await cacheService.set(
       CacheKeys.refreshToken(user.id, refreshTokenId),
       refreshTokenId,
-      CacheTTL.REFRESH_TOKEN
+      Math.max(1, (jwt.decode(refreshToken) as { exp: number }).exp - Math.floor(Date.now() / 1000))
     );
 
     return { accessToken, refreshToken };

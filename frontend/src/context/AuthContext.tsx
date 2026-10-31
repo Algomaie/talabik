@@ -36,10 +36,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser({
             id: u.id,
             email: u.email,
-            firstName: u.first_name,
-            lastName: u.last_name,
+            firstName: u.firstName,
+            lastName: u.lastName,
             phone: u.phone,
-            avatarUrl: u.avatar_url,
+            avatarUrl: u.avatarUrl,
             roles: u.roles,
           });
         })
@@ -61,10 +61,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser({
       id: d.user.id,
       email: d.user.email,
-      firstName: d.user.first_name,
-      lastName: d.user.last_name,
+      firstName: d.user.firstName,
+      lastName: d.user.lastName,
       phone: d.user.phone,
-      avatarUrl: d.user.avatar_url,
+      avatarUrl: d.user.avatarUrl,
       roles: d.user.roles,
     });
   };
@@ -77,10 +77,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser({
       id: d.user.id,
       email: d.user.email,
-      firstName: d.user.first_name,
-      lastName: d.user.last_name,
+      firstName: d.user.firstName,
+      lastName: d.user.lastName,
       phone: d.user.phone,
-      avatarUrl: d.user.avatar_url,
+      avatarUrl: d.user.avatarUrl,
       roles: d.user.roles,
     });
   };

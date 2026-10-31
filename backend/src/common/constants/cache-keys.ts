@@ -4,11 +4,11 @@
  */
 export const CacheKeys = {
   // Store cache
-  storesList: (page: number) => `stores:list:page:${page}`,
+  storesList: (page: number, limit: number) => `stores:list:page:${page}:limit:${limit}`,
   store: (id: string) => `store:${id}`,
 
   // Product cache
-  productsByStore: (storeId: string, page: number) => `products:store:${storeId}:page:${page}`,
+  productsByStore: (storeId: string, page: number, limit: number, sort = '') => `products:store:${storeId}:page:${page}:limit:${limit}:sort:${sort}`,
   product: (id: string) => `product:${id}`,
 
   // User/notification cache

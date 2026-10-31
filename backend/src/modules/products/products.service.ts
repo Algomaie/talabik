@@ -1,7 +1,7 @@
 import { productsRepository } from './products.repository';
 import { storesRepository } from '../stores/stores.repository';
 import { CreateProductDto, UpdateProductDto, Product } from './products.types';
-import { NotFoundError, AuthorizationError, ConflictError } from '../../common/errors';
+import { NotFoundError, AuthorizationError } from '../../common/errors';
 import { cacheService } from '../../redis/cache.service';
 import { CacheKeys, CacheTTL } from '../../common/constants/cache-keys';
 import { logger } from '../../common/utils/logger';
@@ -18,18 +18,18 @@ export class ProductsService {
     limit: number;
   }) {
     // Cache store-specific product pages (non-filtered)
-    if (filters.storeId && !filters.search && !filters.categoryId && !filters.minPrice && !filters.maxPrice) {
+    if (filters.storeId && !filters.search && !filters.categoryId && filters.minPrice === undefined && filters.maxPrice === undefined) {
       const cached = await cacheService.get<{ products: Product[]; total: number }>(
-        CacheKeys.productsByStore(filters.storeId, filters.page)
+        CacheKeys.productsByStore(filters.storeId, filters.page, filters.limit, filters.sort)
       );
       if (cached) return cached;
     }
 
     const result = await productsRepository.findAll(filters);
 
-    if (filters.storeId && !filters.search && !filters.categoryId && !filters.minPrice && !filters.maxPrice) {
+    if (filters.storeId && !filters.search && !filters.categoryId && filters.minPrice === undefined && filters.maxPrice === undefined) {
       await cacheService.set(
-        CacheKeys.productsByStore(filters.storeId, filters.page),
+        CacheKeys.productsByStore(filters.storeId, filters.page, filters.limit, filters.sort),
         result,
         CacheTTL.PRODUCT_LIST
       );

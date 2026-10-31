@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { cacheService } from '../../redis/cache.service';
-import { RateLimitError } from '../errors';
+import { AppError, RateLimitError } from '../errors';
 import { logger } from '../utils/logger';
 
 interface RateLimitOptions {
@@ -44,7 +44,7 @@ export function rateLimiter(options: RateLimitOptions) {
 
       next();
     } catch (error) {
-      if (error instanceof RateLimitError) {
+      if (error instanceof AppError) {
         next(error);
         return;
       }

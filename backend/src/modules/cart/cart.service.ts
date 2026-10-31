@@ -104,7 +104,7 @@ export class CartService {
       );
     }
 
-    return withTransaction(async (client) => {
+    await withTransaction(async (client) => {
       // Get or create cart
       let cartResult = await client.query(
         'SELECT id, store_id FROM carts WHERE user_id = $1',
@@ -146,8 +146,9 @@ export class CartService {
       );
 
       logger.info({ userId, productId, quantity }, 'Item added to cart');
-      return this.getCart(userId);
     });
+    // Read only after COMMIT; a pool query cannot see another client's pending writes.
+    return this.getCart(userId);
   }
 
   /**
