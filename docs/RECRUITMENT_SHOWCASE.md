@@ -17,6 +17,7 @@ The evidence is executable code and tests. This is a portfolio implementation wi
 | PostgreSQL | [Order schema](../backend/src/database/migrations/008_create_orders.ts), [sequence](../backend/src/database/migrations/011_order_number_sequence.ts), [pool](../backend/src/config/database.ts) |
 | Verification | [API tests](../backend/tests/api.test.ts), [regressions](../backend/tests/orders.test.ts), [real database checkout](../backend/tests/checkout.integration.test.ts) |
 | CI | [GitHub workflow](../.github/workflows/ci.yml) |
+| Arabic/English UI | [Provider](../frontend/src/i18n/I18nProvider.tsx), [catalog](../frontend/src/i18n/messages.ts), [switcher](../frontend/src/components/LanguageSwitcher.tsx), [tests](../frontend/tests/I18n.test.tsx), [verification](LOCALIZATION.md) |
 
 ## My Contributions
 

@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n/I18nContext';
 import { useEffect, useState } from 'react';
 import { adminApi } from '../../lib/api';
 import {
@@ -7,6 +8,7 @@ import {
 import '../shared/Shared.css';
 
 export default function AdminDriversPage() {
+  const { t, locale } = useI18n();
   const [drivers, setDrivers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -69,19 +71,19 @@ export default function AdminDriversPage() {
     <div className="page animate-fade-in">
       <div className="container">
         <div className="page-header">
-          <h1><Truck size={28} style={{ verticalAlign: 'middle', marginRight: 8 }} /> Driver Management</h1>
-          <p>Monitor drivers, their availability, and account statuses.</p>
+          <h1><Truck size={28} style={{ verticalAlign: 'middle', marginInlineEnd: 8 }} /> {t(" Driver Management")}</h1>
+          <p>{t("Monitor drivers, their availability, and account statuses.")}</p>
         </div>
 
         <div className="admin-toolbar">
           <div className="admin-search">
             <Search size={18} />
-            <input className="input" placeholder="Search drivers..." value={search} onChange={(e) => setSearch(e.target.value)} />
+            <input className="input" placeholder={t("Search drivers...")} value={search} onChange={(e) => setSearch(e.target.value)} />
           </div>
           <div className="admin-filters">
             {['ALL', 'PENDING', 'APPROVED', 'SUSPENDED'].map((s) => (
               <button key={s} className={`filter-chip ${statusFilter === s ? 'active' : ''}`} onClick={() => { setStatusFilter(s); setPage(1); }}>
-                {s === 'ALL' ? 'All Status' : s}
+                {s === 'ALL' ? t("All Status") : t(s)}
               </button>
             ))}
           </div>
@@ -92,12 +94,12 @@ export default function AdminDriversPage() {
             <table>
               <thead>
                 <tr>
-                  <th>Driver</th>
-                  <th>Availability</th>
-                  <th>Status</th>
-                  <th>Deliveries</th>
-                  <th>Joined</th>
-                  <th>Actions</th>
+                  <th>{t("Driver")}</th>
+                  <th>{t("Availability")}</th>
+                  <th>{t("Status")}</th>
+                  <th>{t("Deliveries")}</th>
+                  <th>{t("Joined")}</th>
+                  <th>{t("Actions")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -116,27 +118,27 @@ export default function AdminDriversPage() {
                     </td>
                     <td>
                       {driver.availability === 'ONLINE' ? (
-                        <span className="badge badge-success"><Wifi size={12} /> Online</span>
+                        <span className="badge badge-success"><Wifi size={12} /> {t(" Online")}</span>
                       ) : (
-                        <span className="badge" style={{ background: 'rgba(100,116,139,0.15)', color: 'var(--text-muted)' }}><WifiOff size={12} /> Offline</span>
+                        <span className="badge" style={{ background: 'rgba(100,116,139,0.15)', color: 'var(--text-muted)' }}><WifiOff size={12} /> {t(" Offline")}</span>
                       )}
                     </td>
                     <td>
                       <span className={`badge ${statusBadge(driver.status)}`}>
                         <span className={`status-dot ${driver.status === 'APPROVED' ? 'active' : driver.status === 'SUSPENDED' ? 'inactive' : 'pending'}`} />
-                        {driver.status}
+                        {t(driver.status)}
                       </span>
                     </td>
                     <td style={{ fontWeight: 600 }}>{driver.total_deliveries || 0}</td>
                     <td style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>
-                      {new Date(driver.created_at).toLocaleDateString()}
+                      {new Date(driver.created_at).toLocaleDateString(locale)}
                     </td>
                     <td>
                       <div className="action-btns">
-                        <button className="action-btn" title="View" onClick={() => setSelectedDriver(driver)}><Eye size={16} /></button>
+                        <button className="action-btn" title={t("View")} onClick={() => setSelectedDriver(driver)}><Eye size={16} /></button>
                         <button
                           className={`action-btn ${driver.status === 'APPROVED' ? 'danger' : 'success'}`}
-                          title={driver.status === 'APPROVED' ? 'Suspend' : 'Approve'}
+                          title={driver.status === 'APPROVED' ? t("Suspend") : t("Approve")}
                           onClick={() => toggleStatus(driver)}
                         >
                           {driver.status === 'APPROVED' ? <ShieldOff size={16} /> : <Shield size={16} />}
@@ -148,7 +150,7 @@ export default function AdminDriversPage() {
                 {filteredDrivers.length === 0 && (
                   <tr><td colSpan={6}>
                     <div className="empty-state" style={{ padding: '2rem' }}>
-                      <Truck size={40} /><h3>No drivers found</h3>
+                      <Truck size={40} /><h3>{t("No drivers found")}</h3>
                     </div>
                   </td></tr>
                 )}
@@ -172,7 +174,7 @@ export default function AdminDriversPage() {
         <div className="modal-overlay" onClick={() => setSelectedDriver(null)}>
           <div className="modal animate-scale-in" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>Driver Details</h3>
+              <h3>{t("Driver Details")}</h3>
               <button className="action-btn" onClick={() => setSelectedDriver(null)}><X size={18} /></button>
             </div>
             <div className="profile-header" style={{ marginBottom: '1.5rem' }}>
@@ -185,12 +187,12 @@ export default function AdminDriversPage() {
               </div>
             </div>
             <div className="detail-grid">
-              <div className="detail-item"><label>Phone</label><span>{selectedDriver.phone || 'N/A'}</span></div>
-              <div className="detail-item"><label>Status</label><span className={`badge ${statusBadge(selectedDriver.status)}`}>{selectedDriver.status}</span></div>
-              <div className="detail-item"><label>Availability</label><span>{selectedDriver.availability || 'OFFLINE'}</span></div>
-              <div className="detail-item"><label>Deliveries</label><span>{selectedDriver.total_deliveries || 0}</span></div>
-              <div className="detail-item"><label>Vehicle</label><span>{selectedDriver.vehicle_type || 'N/A'}</span></div>
-              <div className="detail-item"><label>Joined</label><span>{new Date(selectedDriver.created_at).toLocaleDateString()}</span></div>
+              <div className="detail-item"><label>{t("Phone")}</label><span>{selectedDriver.phone || t("N/A")}</span></div>
+              <div className="detail-item"><label>{t("Status")}</label><span className={`badge ${statusBadge(selectedDriver.status)}`}>{t(selectedDriver.status)}</span></div>
+              <div className="detail-item"><label>{t("Availability")}</label><span>{t(selectedDriver.availability) || t("OFFLINE")}</span></div>
+              <div className="detail-item"><label>{t("Deliveries")}</label><span>{selectedDriver.total_deliveries || 0}</span></div>
+              <div className="detail-item"><label>{t("Vehicle")}</label><span>{t(selectedDriver.vehicle_type) || t("N/A")}</span></div>
+              <div className="detail-item"><label>{t("Joined")}</label><span>{new Date(selectedDriver.created_at).toLocaleDateString(locale)}</span></div>
             </div>
             <div style={{ marginTop: '1.5rem' }}>
               <button
@@ -200,7 +202,7 @@ export default function AdminDriversPage() {
                   setSelectedDriver({ ...selectedDriver, status: selectedDriver.status === 'APPROVED' ? 'SUSPENDED' : 'APPROVED' });
                 }}
               >
-                {selectedDriver.status === 'APPROVED' ? <><ShieldOff size={16} /> Suspend Driver</> : <><Shield size={16} /> Approve Driver</>}
+                {selectedDriver.status === 'APPROVED' ? <><ShieldOff size={16} /> {t(" Suspend Driver")}</> : <><Shield size={16} /> {t(" Approve Driver")}</>}
               </button>
             </div>
           </div>

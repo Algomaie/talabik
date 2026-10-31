@@ -1,3 +1,4 @@
+import { useI18n } from '../i18n/I18nContext';
 import { Outlet, Navigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { 
@@ -7,8 +8,10 @@ import {
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { notificationsApi } from '../lib/api';
+import LanguageSwitcher from './LanguageSwitcher';
 
 export default function AppLayout() {
+  const { t } = useI18n();
   const { user, isAuthenticated, isLoading, logout, hasRole } = useAuth();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -61,34 +64,34 @@ export default function AppLayout() {
       <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
         <div className="sidebar-brand">
           <Package size={28} className="gradient-text" />
-          <h2>Talbak</h2>
+          <h2>{t("Talbak")}</h2>
         </div>
 
-        <nav className="sidebar-nav">
+        <nav className="sidebar-nav" id="main-navigation">
           <Link 
             to="/dashboard" 
             className={`sidebar-link ${isActive('/dashboard') ? 'active' : ''}`}
             onClick={closeSidebar}
           >
             <LayoutDashboard size={20} />
-            <span>Dashboard</span>
+            <span>{t("Dashboard")}</span>
           </Link>
 
           {/* Customer Routes */}
           {hasRole('CUSTOMER') && (
             <>
-              <div className="sidebar-section">Customer</div>
+              <div className="sidebar-section">{t("Customer")}</div>
               <Link to="/stores" className={`sidebar-link ${location.pathname.startsWith('/stores') ? 'active' : ''}`} onClick={closeSidebar}>
                 <Store size={20} />
-                <span>Stores</span>
+                <span>{t("Stores")}</span>
               </Link>
               <Link to="/cart" className={`sidebar-link ${isActive('/cart') ? 'active' : ''}`} onClick={closeSidebar}>
                 <ShoppingBag size={20} />
-                <span>Cart</span>
+                <span>{t("Cart")}</span>
               </Link>
               <Link to="/my-orders" className={`sidebar-link ${isActive('/my-orders') ? 'active' : ''}`} onClick={closeSidebar}>
                 <Package size={20} />
-                <span>My Orders</span>
+                <span>{t("My Orders")}</span>
               </Link>
             </>
           )}
@@ -96,22 +99,22 @@ export default function AppLayout() {
           {/* Merchant Routes */}
           {hasRole('MERCHANT') && (
             <>
-              <div className="sidebar-section">Merchant</div>
+              <div className="sidebar-section">{t("Merchant")}</div>
               <Link to="/merchant/orders" className={`sidebar-link ${isActive('/merchant/orders') ? 'active' : ''}`} onClick={closeSidebar}>
                 <ClipboardList size={20} />
-                <span>Store Orders</span>
+                <span>{t("Store Orders")}</span>
               </Link>
               <Link to="/merchant/products" className={`sidebar-link ${isActive('/merchant/products') ? 'active' : ''}`} onClick={closeSidebar}>
                 <Package size={20} />
-                <span>Products</span>
+                <span>{t("Products")}</span>
               </Link>
               <Link to="/merchant/categories" className={`sidebar-link ${isActive('/merchant/categories') ? 'active' : ''}`} onClick={closeSidebar}>
                 <FolderOpen size={20} />
-                <span>Categories</span>
+                <span>{t("Categories")}</span>
               </Link>
               <Link to="/merchant/settings" className={`sidebar-link ${isActive('/merchant/settings') ? 'active' : ''}`} onClick={closeSidebar}>
                 <Store size={20} />
-                <span>Store Settings</span>
+                <span>{t("Store Settings")}</span>
               </Link>
             </>
           )}
@@ -119,14 +122,14 @@ export default function AppLayout() {
           {/* Driver Routes */}
           {hasRole('DRIVER') && (
             <>
-              <div className="sidebar-section">Driver</div>
+              <div className="sidebar-section">{t("Driver")}</div>
               <Link to="/driver/deliveries" className={`sidebar-link ${isActive('/driver/deliveries') ? 'active' : ''}`} onClick={closeSidebar}>
                 <Truck size={20} />
-                <span>Available Tasks</span>
+                <span>{t("Available Tasks")}</span>
               </Link>
               <Link to="/driver/history" className={`sidebar-link ${isActive('/driver/history') ? 'active' : ''}`} onClick={closeSidebar}>
                 <DollarSign size={20} />
-                <span>History & Earnings</span>
+                <span>{t("History & Earnings")}</span>
               </Link>
             </>
           )}
@@ -134,22 +137,22 @@ export default function AppLayout() {
           {/* Admin Routes */}
           {hasRole('ADMIN') && (
             <>
-              <div className="sidebar-section">Administration</div>
+              <div className="sidebar-section">{t("Administration")}</div>
               <Link to="/admin/users" className={`sidebar-link ${isActive('/admin/users') ? 'active' : ''}`} onClick={closeSidebar}>
                 <Users size={20} />
-                <span>Users</span>
+                <span>{t("Users")}</span>
               </Link>
               <Link to="/admin/merchants" className={`sidebar-link ${isActive('/admin/merchants') ? 'active' : ''}`} onClick={closeSidebar}>
                 <Briefcase size={20} />
-                <span>Merchants</span>
+                <span>{t("Merchants")}</span>
               </Link>
               <Link to="/admin/drivers" className={`sidebar-link ${isActive('/admin/drivers') ? 'active' : ''}`} onClick={closeSidebar}>
                 <Truck size={20} />
-                <span>Drivers</span>
+                <span>{t("Drivers")}</span>
               </Link>
               <Link to="/admin/orders" className={`sidebar-link ${isActive('/admin/orders') ? 'active' : ''}`} onClick={closeSidebar}>
                 <ShoppingBag size={20} />
-                <span>Orders</span>
+                <span>{t("Orders")}</span>
               </Link>
             </>
           )}
@@ -158,20 +161,20 @@ export default function AppLayout() {
 
           <Link to="/notifications" className={`sidebar-link ${isActive('/notifications') ? 'active' : ''}`} onClick={closeSidebar}>
             <Bell size={20} />
-            <span>Notifications</span>
+            <span>{t("Notifications")}</span>
             {unreadCount > 0 && (
-              <span className="badge badge-error" style={{ marginLeft: 'auto', padding: '0.125rem 0.5rem', fontSize: '0.65rem' }}>
+              <span className="badge badge-error" style={{ marginInlineStart: 'auto', padding: '0.125rem 0.5rem', fontSize: '0.65rem' }}>
                 {unreadCount}
               </span>
             )}
           </Link>
           <Link to="/settings" className={`sidebar-link ${isActive('/settings') ? 'active' : ''}`} onClick={closeSidebar}>
             <Settings size={20} />
-            <span>Settings</span>
+            <span>{t("Settings")}</span>
           </Link>
           <button className="sidebar-link" onClick={logout} style={{ color: 'var(--error)' }}>
             <LogOut size={20} />
-            <span>Logout</span>
+            <span>{t("Logout")}</span>
           </button>
         </nav>
       </aside>
@@ -180,7 +183,7 @@ export default function AppLayout() {
       <main className="main-content">
         <header className="topbar">
           <div className="flex items-center gap-2">
-            <button className="notification-btn" onClick={toggleSidebar} style={{ display: 'none' }} id="mobile-menu-btn">
+            <button className="notification-btn" aria-label={t('Menu')} aria-expanded={sidebarOpen} aria-controls="main-navigation" onClick={toggleSidebar} style={{ display: 'none' }} id="mobile-menu-btn">
               <Menu size={24} />
             </button>
             <style>{`
@@ -189,6 +192,7 @@ export default function AppLayout() {
           </div>
 
           <div className="topbar-right">
+            <LanguageSwitcher />
             <Link to="/notifications" className="notification-btn" style={{ textDecoration: 'none' }}>
               <Bell size={20} />
               {unreadCount > 0 && <span className="notification-badge" />}

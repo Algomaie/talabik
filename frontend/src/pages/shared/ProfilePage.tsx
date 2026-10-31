@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n/I18nContext';
 import { useEffect, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { usersApi, addressesApi, ordersApi, deliveriesApi, storesApi } from '../../lib/api';
@@ -9,6 +10,7 @@ import {
 import '../shared/Shared.css';
 
 export default function ProfilePage() {
+  const { t, locale } = useI18n();
   const { hasRole } = useAuth();
   const [profile, setProfile] = useState<any>(null);
   const [addresses, setAddresses] = useState<any[]>([]);
@@ -134,7 +136,7 @@ export default function ProfilePage() {
       setProfile((prev: any) => ({ ...prev, ...editForm }));
       setIsEditing(false);
     } catch (err: any) {
-      alert(err.response?.data?.error?.message || 'Failed to update profile');
+      alert(t(err.response?.data?.error?.message || 'Failed to update profile'));
     } finally {
       setProfileSaving(false);
     }
@@ -149,8 +151,8 @@ export default function ProfilePage() {
       setPasswordError('New password and confirmation do not match.');
       return;
     }
-    if (passwordForm.newPassword.length < 6) {
-      setPasswordError('New password must be at least 6 characters.');
+    if (passwordForm.newPassword.length < 8) {
+      setPasswordError('New password must be at least 8 characters.');
       return;
     }
 
@@ -201,24 +203,24 @@ export default function ProfilePage() {
       const list = addrRes.data.data?.addresses || addrRes.data.data || [];
       setAddresses(Array.isArray(list) ? list : []);
     } catch (err: any) {
-      alert(err.response?.data?.error?.message || 'Failed to set default address');
+      alert(t(err.response?.data?.error?.message || 'Failed to set default address'));
     }
   };
 
   const handleDeleteAddress = async (id: string) => {
-    if (!window.confirm('Are you sure you want to delete this address?')) return;
+    if (!window.confirm(t('Are you sure you want to delete this address?'))) return;
     try {
       await addressesApi.remove(id);
       setAddresses((prev) => prev.filter((a) => a.id !== id));
     } catch (err: any) {
-      alert(err.response?.data?.error?.message || 'Failed to delete address');
+      alert(t(err.response?.data?.error?.message || 'Failed to delete address'));
     }
   };
 
   const getInitials = (f: string, l: string) => `${f?.[0] || ''}${l?.[0] || ''}`.toUpperCase();
 
   const formatCurrency = (val: number) => {
-    return new Intl.NumberFormat('en-SA', { style: 'currency', currency: 'SAR' }).format(val);
+    return new Intl.NumberFormat(locale, { style: 'currency', currency: 'SAR' }).format(val);
   };
 
   if (loading) {
@@ -227,7 +229,7 @@ export default function ProfilePage() {
         <div className="container" style={{ maxWidth: 900 }}>
           <div className="loading-screen">
             <div className="spinner" />
-            <p style={{ color: 'var(--text-secondary)', marginTop: '1rem' }}>Loading profile...</p>
+            <p style={{ color: 'var(--text-secondary)', marginTop: '1rem' }}>{t("Loading profile...")}</p>
           </div>
         </div>
       </div>
@@ -240,8 +242,8 @@ export default function ProfilePage() {
         <div className="container" style={{ maxWidth: 900 }}>
           <div className="empty-state glass-card">
             <User size={48} />
-            <h3>Profile not found</h3>
-            <p>Unable to load user profile details.</p>
+            <h3>{t("Profile not found")}</h3>
+            <p>{t("Unable to load user profile details.")}</p>
           </div>
         </div>
       </div>
@@ -277,10 +279,9 @@ export default function ProfilePage() {
                 ))}
               </div>
             </div>
-            <div style={{ marginLeft: 'auto' }}>
+            <div style={{ marginInlineStart: 'auto' }}>
               <button className="btn btn-ghost" onClick={() => setIsEditing(true)}>
-                <Edit2 size={16} /> Edit Profile
-              </button>
+                <Edit2 size={16} /> {t(" Edit Profile")}</button>
             </div>
           </div>
         </div>
@@ -292,20 +293,20 @@ export default function ProfilePage() {
 
             {/* Account Details Card */}
             <div className="glass-card">
-              <h3 style={{ marginBottom: '1.25rem' }}>Account Details</h3>
+              <h3 style={{ marginBottom: '1.25rem' }}>{t("Account Details")}</h3>
               <div className="settings-section" style={{ marginBottom: 0 }}>
                 <div className="settings-row">
                   <div className="settings-info">
-                    <h4>Member Since</h4>
-                    <p>{new Date(profile.created_at).toLocaleDateString()}</p>
+                    <h4>{t("Member Since")}</h4>
+                    <p>{new Date(profile.created_at).toLocaleDateString(locale)}</p>
                   </div>
                 </div>
                 <div className="settings-row">
                   <div className="settings-info">
-                    <h4>Account Status</h4>
+                    <h4>{t("Account Status")}</h4>
                     <p className="flex items-center gap-1" style={{ color: profile.is_active ? 'var(--success)' : 'var(--error)' }}>
                       <span className={`status-dot ${profile.is_active ? 'active' : 'inactive'}`} />
-                      {profile.is_active ? 'Active' : 'Inactive'}
+                      {profile.is_active ? t("Active") : t("Inactive")}
                     </p>
                   </div>
                 </div>
@@ -314,8 +315,7 @@ export default function ProfilePage() {
               {/* Real Statistics Section */}
               <div style={{ marginTop: '1.5rem', paddingTop: '1.25rem', borderTop: '1px solid var(--border)' }}>
                 <h4 style={{ fontSize: '0.9rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.875rem' }}>
-                  Platform Activity
-                </h4>
+                  {t("Platform Activity")}</h4>
                 <div className="grid grid-2" style={{ gap: '1rem' }}>
                   {(hasRole('CUSTOMER') || hasRole('MERCHANT')) && (
                     <div className="stat-card" style={{ padding: '1rem', background: 'var(--bg-tertiary)', borderRadius: 'var(--radius-md)' }}>
@@ -326,8 +326,7 @@ export default function ProfilePage() {
                             {stats.ordersCount}
                           </div>
                           <div className="stat-label" style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                            Total Orders
-                          </div>
+                            {t("Total Orders")}</div>
                         </div>
                       </div>
                     </div>
@@ -342,8 +341,7 @@ export default function ProfilePage() {
                             {stats.storesCount}
                           </div>
                           <div className="stat-label" style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                            Managed Stores
-                          </div>
+                            {t("Managed Stores")}</div>
                         </div>
                       </div>
                     </div>
@@ -359,8 +357,7 @@ export default function ProfilePage() {
                               {stats.deliveriesCount}
                             </div>
                             <div className="stat-label" style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                              Total Deliveries
-                            </div>
+                              {t("Total Deliveries")}</div>
                           </div>
                         </div>
                       </div>
@@ -373,8 +370,7 @@ export default function ProfilePage() {
                               {formatCurrency(stats.earningsTotal)}
                             </div>
                             <div className="stat-label" style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                              Total Earnings
-                            </div>
+                              {t("Total Earnings")}</div>
                           </div>
                         </div>
                       </div>
@@ -388,30 +384,30 @@ export default function ProfilePage() {
             <div className="glass-card">
               <div className="flex items-center gap-2" style={{ marginBottom: '1.25rem' }}>
                 <KeyRound size={20} className="text-primary" />
-                <h3 style={{ margin: 0 }}>Change Password</h3>
+                <h3 style={{ margin: 0 }}>{t("Change Password")}</h3>
               </div>
 
               {passwordSuccess && (
                 <div style={{ background: 'var(--success-bg)', color: 'var(--success)', border: '1px solid var(--success)', borderRadius: 'var(--radius-md)', padding: '0.75rem 1rem', marginBottom: '1rem', fontSize: '0.875rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <CheckCircle2 size={16} />
-                  <span>{passwordSuccess}</span>
+                  <span>{t(passwordSuccess)}</span>
                 </div>
               )}
 
               {passwordError && (
                 <div style={{ background: 'var(--error-bg)', color: 'var(--error)', border: '1px solid var(--error)', borderRadius: 'var(--radius-md)', padding: '0.75rem 1rem', marginBottom: '1rem', fontSize: '0.875rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <AlertCircle size={16} />
-                  <span>{passwordError}</span>
+                  <span>{t(passwordError)}</span>
                 </div>
               )}
 
               <form onSubmit={handlePasswordChange} className="flex flex-col gap-3">
                 <div className="input-group">
-                  <label>Current Password</label>
+                  <label>{t("Current Password")}</label>
                   <input
                     className="input"
                     type="password"
-                    placeholder="Enter current password"
+                    placeholder={t("Enter current password")}
                     value={passwordForm.currentPassword}
                     onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })}
                     required
@@ -419,11 +415,11 @@ export default function ProfilePage() {
                 </div>
 
                 <div className="input-group">
-                  <label>New Password</label>
+                  <label>{t("New Password")}</label>
                   <input
                     className="input"
                     type="password"
-                    placeholder="At least 6 characters"
+                    placeholder={t("At least 8 characters")}
                     value={passwordForm.newPassword}
                     onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
                     required
@@ -431,11 +427,11 @@ export default function ProfilePage() {
                 </div>
 
                 <div className="input-group">
-                  <label>Confirm New Password</label>
+                  <label>{t("Confirm New Password")}</label>
                   <input
                     className="input"
                     type="password"
-                    placeholder="Confirm new password"
+                    placeholder={t("Confirm new password")}
                     value={passwordForm.confirmPassword}
                     onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
                     required
@@ -448,7 +444,7 @@ export default function ProfilePage() {
                   style={{ marginTop: '0.5rem' }}
                   disabled={passwordSaving}
                 >
-                  <Lock size={16} /> {passwordSaving ? 'Updating...' : 'Update Password'}
+                  <Lock size={16} /> {passwordSaving ? t("Updating...") : t("Update Password")}
                 </button>
               </form>
             </div>
@@ -458,24 +454,21 @@ export default function ProfilePage() {
           <div className="glass-card">
             <div className="flex items-center justify-between" style={{ marginBottom: '1.5rem' }}>
               <div>
-                <h3 style={{ margin: 0 }}>Saved Addresses</h3>
+                <h3 style={{ margin: 0 }}>{t("Saved Addresses")}</h3>
                 <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                  Manage delivery locations for swift checkout
-                </span>
+                  {t("Manage delivery locations for swift checkout")}</span>
               </div>
               <button className="btn btn-primary btn-sm" onClick={() => setIsAddingAddress(true)}>
-                <Plus size={16} /> Add Address
-              </button>
+                <Plus size={16} /> {t(" Add Address")}</button>
             </div>
 
             {addresses.length === 0 ? (
               <div className="empty-state" style={{ padding: '3rem 1rem' }}>
                 <MapPin size={40} style={{ opacity: 0.3 }} />
-                <h4>No addresses saved</h4>
-                <p style={{ fontSize: '0.85rem' }}>Save your home or work address for faster delivery ordering.</p>
+                <h4>{t("No addresses saved")}</h4>
+                <p style={{ fontSize: '0.85rem' }}>{t("Save your home or work address for faster delivery ordering.")}</p>
                 <button className="btn btn-primary btn-sm" style={{ marginTop: '1rem' }} onClick={() => setIsAddingAddress(true)}>
-                  <Plus size={16} /> Add Your First Address
-                </button>
+                  <Plus size={16} /> {t(" Add Your First Address")}</button>
               </div>
             ) : (
               <div className="flex flex-col gap-3">
@@ -491,8 +484,8 @@ export default function ProfilePage() {
                       <div style={{ flex: 1 }}>
                         <div className="address-label">
                           <MapPin size={16} style={{ color: isDefault ? 'var(--primary)' : 'var(--text-muted)' }} />
-                          <span>{label}</span>
-                          {isDefault && <span className="badge badge-success">Default</span>}
+                          <span>{t(label)}</span>
+                          {isDefault && <span className="badge badge-success">{t("Default")}</span>}
                         </div>
                         <div className="address-text" style={{ marginTop: '0.35rem' }}>
                           <div>{street}</div>
@@ -506,7 +499,7 @@ export default function ProfilePage() {
                         {!isDefault && (
                           <button
                             className="action-btn"
-                            title="Set as Default"
+                            title={t("Set as Default")}
                             onClick={() => handleSetDefaultAddress(address.id)}
                           >
                             <Check size={16} />
@@ -514,7 +507,7 @@ export default function ProfilePage() {
                         )}
                         <button
                           className="action-btn danger"
-                          title="Delete Address"
+                          title={t("Delete Address")}
                           onClick={() => handleDeleteAddress(address.id)}
                         >
                           <Trash2 size={16} />
@@ -534,12 +527,12 @@ export default function ProfilePage() {
         <div className="modal-overlay" onClick={() => setIsEditing(false)}>
           <div className="modal animate-scale-in" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>Edit Profile</h3>
+              <h3>{t("Edit Profile")}</h3>
             </div>
             <form onSubmit={handleUpdateProfile} className="flex flex-col gap-3">
               <div className="grid grid-2">
                 <div className="input-group">
-                  <label>First Name</label>
+                  <label>{t("First Name")}</label>
                   <input
                     className="input"
                     value={editForm.first_name}
@@ -548,7 +541,7 @@ export default function ProfilePage() {
                   />
                 </div>
                 <div className="input-group">
-                  <label>Last Name</label>
+                  <label>{t("Last Name")}</label>
                   <input
                     className="input"
                     value={editForm.last_name}
@@ -558,21 +551,20 @@ export default function ProfilePage() {
                 </div>
               </div>
               <div className="input-group">
-                <label>Phone Number</label>
+                <label>{t("Phone Number")}</label>
                 <input
                   className="input"
                   type="tel"
-                  placeholder="e.g. +966500000000"
+                  placeholder={t("e.g. +966500000000")}
                   value={editForm.phone}
                   onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
                 />
               </div>
               <div className="flex gap-2" style={{ marginTop: '1rem' }}>
                 <button type="button" className="btn btn-ghost" onClick={() => setIsEditing(false)} style={{ flex: 1 }}>
-                  Cancel
-                </button>
+                  {t("Cancel")}</button>
                 <button type="submit" className="btn btn-primary" style={{ flex: 1 }} disabled={profileSaving}>
-                  {profileSaving ? 'Saving...' : 'Save Changes'}
+                  {profileSaving ? t("Saving...") : t("Save Changes")}
                 </button>
               </div>
             </form>
@@ -585,21 +577,21 @@ export default function ProfilePage() {
         <div className="modal-overlay" onClick={() => setIsAddingAddress(false)}>
           <div className="modal animate-scale-in" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>Add New Address</h3>
+              <h3>{t("Add New Address")}</h3>
             </div>
 
             {addressError && (
               <div style={{ background: 'var(--error-bg)', color: 'var(--error)', border: '1px solid var(--error)', borderRadius: 'var(--radius-md)', padding: '0.75rem 1rem', marginBottom: '1rem', fontSize: '0.85rem' }}>
-                {addressError}
+                {t(addressError)}
               </div>
             )}
 
             <form onSubmit={handleAddAddress} className="flex flex-col gap-3">
               <div className="input-group">
-                <label>Address Label</label>
+                <label>{t("Address Label")}</label>
                 <input
                   className="input"
-                  placeholder="e.g. Home, Work, Apartment"
+                  placeholder={t("e.g. Home, Work, Apartment")}
                   value={addressForm.label}
                   onChange={(e) => setAddressForm({ ...addressForm, label: e.target.value })}
                   required
@@ -607,10 +599,10 @@ export default function ProfilePage() {
               </div>
 
               <div className="input-group">
-                <label>Street Address / Address Line</label>
+                <label>{t("Street Address / Address Line")}</label>
                 <input
                   className="input"
-                  placeholder="e.g. King Fahd Rd, Building 14, Apt 4"
+                  placeholder={t("e.g. King Fahd Rd, Building 14, Apt 4")}
                   value={addressForm.addressLine}
                   onChange={(e) => setAddressForm({ ...addressForm, addressLine: e.target.value })}
                   required
@@ -619,20 +611,20 @@ export default function ProfilePage() {
 
               <div className="grid grid-2">
                 <div className="input-group">
-                  <label>City</label>
+                  <label>{t("City")}</label>
                   <input
                     className="input"
-                    placeholder="e.g. Riyadh, Jeddah"
+                    placeholder={t("e.g. Riyadh, Jeddah")}
                     value={addressForm.city}
                     onChange={(e) => setAddressForm({ ...addressForm, city: e.target.value })}
                     required
                   />
                 </div>
                 <div className="input-group">
-                  <label>Area / District</label>
+                  <label>{t("Area / District")}</label>
                   <input
                     className="input"
-                    placeholder="e.g. Al Olaya, Al Malaz"
+                    placeholder={t("e.g. Al Olaya, Al Malaz")}
                     value={addressForm.area}
                     onChange={(e) => setAddressForm({ ...addressForm, area: e.target.value })}
                     required
@@ -649,16 +641,14 @@ export default function ProfilePage() {
                   style={{ width: 18, height: 18, cursor: 'pointer', accentColor: 'var(--primary)' }}
                 />
                 <label htmlFor="is_default" style={{ fontSize: '0.9rem', cursor: 'pointer' }}>
-                  Set as default delivery address
-                </label>
+                  {t("Set as default delivery address")}</label>
               </div>
 
               <div className="flex gap-2" style={{ marginTop: '1rem' }}>
                 <button type="button" className="btn btn-ghost" onClick={() => setIsAddingAddress(false)} style={{ flex: 1 }}>
-                  Cancel
-                </button>
+                  {t("Cancel")}</button>
                 <button type="submit" className="btn btn-primary" style={{ flex: 1 }} disabled={addressSaving}>
-                  {addressSaving ? 'Saving...' : 'Save Address'}
+                  {addressSaving ? t("Saving...") : t("Save Address")}
                 </button>
               </div>
             </form>

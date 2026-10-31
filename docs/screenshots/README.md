@@ -10,6 +10,11 @@ These files were captured from the actual Vite application in local Edge/Playwri
 | [orders.png](orders.png) | Customer order list; captured before final Cart contract fixes |
 | [admin-panel.png](admin-panel.png) | Admin users page |
 | [login-mobile.png](login-mobile.png) | Login at 390×844; no horizontal overflow observed |
+| [ar-login.png](ar-login.png) | Arabic login form with language switcher |
+| [ar-products.png](ar-products.png) | Arabic merchant product interface; stored names remain in their original language |
+| [ar-mobile.png](ar-mobile.png) | Arabic customer dashboard at 390×844 |
+
+The three `ar-` captures were added in the [localization follow-up](../LOCALIZATION.md) with the real local API, PostgreSQL **and Redis** running. The service limitation below refers to the original English captures.
 
 Authenticated captures used the real API and isolated PostgreSQL database, without intercepted or fabricated API responses. Redis was unavailable, so the API used its documented development fallback. These captures do not verify refresh-token or Redis behavior. Final full browser checkout was not executed because automatic approval review reached its usage limit; see [quality gate](../QUALITY_GATE.md).
 

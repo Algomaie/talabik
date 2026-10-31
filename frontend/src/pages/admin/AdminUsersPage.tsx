@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n/I18nContext';
 import { useEffect, useState } from 'react';
 import { adminApi } from '../../lib/api';
 import {
@@ -18,6 +19,7 @@ interface UserItem {
 }
 
 export default function AdminUsersPage() {
+  const { t, locale } = useI18n();
   const [users, setUsers] = useState<UserItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -70,7 +72,7 @@ export default function AdminUsersPage() {
     return (
       <div className="loading-screen">
         <div className="spinner" />
-        <p style={{ color: 'var(--text-secondary)' }}>Loading users...</p>
+        <p style={{ color: 'var(--text-secondary)' }}>{t("Loading users...")}</p>
       </div>
     );
   }
@@ -80,10 +82,9 @@ export default function AdminUsersPage() {
       <div className="container">
         <div className="page-header">
           <h1>
-            <Users size={28} style={{ verticalAlign: 'middle', marginRight: 8 }} />
-            User Management
-          </h1>
-          <p>Manage all platform users, roles, and account statuses.</p>
+            <Users size={28} style={{ verticalAlign: 'middle', marginInlineEnd: 8 }} />
+            {t("User Management")}</h1>
+          <p>{t("Manage all platform users, roles, and account statuses.")}</p>
         </div>
 
         {/* Toolbar */}
@@ -92,7 +93,7 @@ export default function AdminUsersPage() {
             <Search size={18} />
             <input
               className="input"
-              placeholder="Search users..."
+              placeholder={t("Search users...")}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
@@ -104,7 +105,7 @@ export default function AdminUsersPage() {
                 className={`filter-chip ${roleFilter === r ? 'active' : ''}`}
                 onClick={() => { setRoleFilter(r); setPage(1); }}
               >
-                {r === 'ALL' ? 'All Roles' : r}
+                {r === 'ALL' ? t("All Roles") : t(r)}
               </button>
             ))}
           </div>
@@ -116,11 +117,11 @@ export default function AdminUsersPage() {
             <table>
               <thead>
                 <tr>
-                  <th>User</th>
-                  <th>Roles</th>
-                  <th>Status</th>
-                  <th>Joined</th>
-                  <th>Actions</th>
+                  <th>{t("User")}</th>
+                  <th>{t("Roles")}</th>
+                  <th>{t("Status")}</th>
+                  <th>{t("Joined")}</th>
+                  <th>{t("Actions")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -150,7 +151,7 @@ export default function AdminUsersPage() {
                               role === 'DRIVER' ? 'badge-warning' : 'badge-primary'
                             }`}
                           >
-                            {role}
+                            {t(role)}
                           </span>
                         ))}
                       </div>
@@ -158,24 +159,24 @@ export default function AdminUsersPage() {
                     <td>
                       <span className={`badge ${user.is_active ? 'badge-success' : 'badge-error'}`}>
                         <span className={`status-dot ${user.is_active ? 'active' : 'inactive'}`} />
-                        {user.is_active ? 'Active' : 'Inactive'}
+                        {user.is_active ? t("Active") : t("Inactive")}
                       </span>
                     </td>
                     <td style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>
-                      {new Date(user.created_at).toLocaleDateString()}
+                      {new Date(user.created_at).toLocaleDateString(locale)}
                     </td>
                     <td>
                       <div className="action-btns">
                         <button
                           className="action-btn"
-                          title="View Details"
+                          title={t("View Details")}
                           onClick={() => setSelectedUser(user)}
                         >
                           <Eye size={16} />
                         </button>
                         <button
                           className={`action-btn ${user.is_active ? 'danger' : 'success'}`}
-                          title={user.is_active ? 'Deactivate' : 'Activate'}
+                          title={user.is_active ? t("Deactivate") : t("Activate")}
                           onClick={() => toggleStatus(user)}
                         >
                           {user.is_active ? <ShieldOff size={16} /> : <Shield size={16} />}
@@ -189,8 +190,8 @@ export default function AdminUsersPage() {
                     <td colSpan={5}>
                       <div className="empty-state" style={{ padding: '2rem' }}>
                         <Users size={40} />
-                        <h3>No users found</h3>
-                        <p>Try adjusting your search or filters.</p>
+                        <h3>{t("No users found")}</h3>
+                        <p>{t("Try adjusting your search or filters.")}</p>
                       </div>
                     </td>
                   </tr>
@@ -227,7 +228,7 @@ export default function AdminUsersPage() {
         <div className="modal-overlay" onClick={() => setSelectedUser(null)}>
           <div className="modal animate-scale-in" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>User Details</h3>
+              <h3>{t("User Details")}</h3>
               <button className="action-btn" onClick={() => setSelectedUser(null)}>
                 <X size={18} />
               </button>
@@ -245,26 +246,26 @@ export default function AdminUsersPage() {
 
             <div className="detail-grid">
               <div className="detail-item">
-                <label>Phone</label>
-                <span>{selectedUser.phone || 'N/A'}</span>
+                <label>{t("Phone")}</label>
+                <span>{selectedUser.phone || t("N/A")}</span>
               </div>
               <div className="detail-item">
-                <label>Status</label>
+                <label>{t("Status")}</label>
                 <span className={`badge ${selectedUser.is_active ? 'badge-success' : 'badge-error'}`}>
-                  {selectedUser.is_active ? 'Active' : 'Inactive'}
+                  {selectedUser.is_active ? t("Active") : t("Inactive")}
                 </span>
               </div>
               <div className="detail-item">
-                <label>Roles</label>
+                <label>{t("Roles")}</label>
                 <div className="flex gap-1" style={{ flexWrap: 'wrap', marginTop: '0.25rem' }}>
                   {(selectedUser.roles || []).map((r) => (
-                    <span key={r} className="badge badge-primary">{r}</span>
+                    <span key={r} className="badge badge-primary">{t(r)}</span>
                   ))}
                 </div>
               </div>
               <div className="detail-item">
-                <label>Joined</label>
-                <span>{new Date(selectedUser.created_at).toLocaleDateString()}</span>
+                <label>{t("Joined")}</label>
+                <span>{new Date(selectedUser.created_at).toLocaleDateString(locale)}</span>
               </div>
             </div>
 
@@ -277,9 +278,9 @@ export default function AdminUsersPage() {
                 }}
               >
                 {selectedUser.is_active ? (
-                  <><ShieldOff size={16} /> Deactivate Account</>
+                  <><ShieldOff size={16} /> {t(" Deactivate Account")}</>
                 ) : (
-                  <><Shield size={16} /> Activate Account</>
+                  <><Shield size={16} /> {t(" Activate Account")}</>
                 )}
               </button>
             </div>

@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n/I18nContext';
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { cartApi, ordersApi, addressesApi, storesApi } from '../../lib/api';
@@ -17,6 +18,7 @@ interface Address {
 }
 
 export default function CartPage() {
+  const { t } = useI18n();
   const checkoutPending = useRef(false);
   const checkoutAttempt = useRef<{ payload: string; key: string } | null>(null);
   const navigate = useNavigate();
@@ -164,7 +166,7 @@ export default function CartPage() {
   const handleCheckout = async () => {
     if (checkoutPending.current) return;
     if (!selectedAddress) {
-      alert('Please select or add a delivery address.');
+      alert(t('Please select or add a delivery address.'));
       return;
     }
     try {
@@ -178,7 +180,7 @@ export default function CartPage() {
       checkoutAttempt.current = null;
       navigate('/my-orders');
     } catch (err: any) {
-      alert(err.response?.data?.error?.message || err.response?.data?.message || 'Checkout failed');
+      alert(t(err.response?.data?.error?.message || err.response?.data?.message || 'Checkout failed'));
     } finally {
       checkoutPending.current = false;
       setCheckingOut(false);
@@ -191,29 +193,28 @@ export default function CartPage() {
         <div className="container">
           <div className="loading-screen">
             <div className="spinner" />
-            <p style={{ color: 'var(--text-secondary)' }}>Loading your cart...</p>
+            <p style={{ color: 'var(--text-secondary)' }}>{t("Loading your cart...")}</p>
           </div>
         </div>
       </div>
     );
   }
 
-  if (loadError) return <div className="page"><p role="alert">{loadError}</p><button onClick={loadData}>Retry</button></div>;
+  if (loadError) return <div className="page"><p role="alert">{t(loadError)}</p><button onClick={loadData}>{t("Retry")}</button></div>;
 
   if (!cart || !cart.items || cart.items.length === 0) {
     return (
       <div className="page container animate-fade-in">
         <div className="empty-state glass-card">
           <ShoppingBag size={64} />
-          <h3>Your cart is empty</h3>
-          <p>Looks like you haven't added anything to your cart yet.</p>
+          <h3>{t("Your cart is empty")}</h3>
+          <p>{t("Looks like you haven't added anything to your cart yet.")}</p>
           <button
             className="btn btn-primary"
             onClick={() => navigate('/stores')}
             style={{ marginTop: '1.5rem' }}
           >
-            Browse Stores
-          </button>
+            {t("Browse Stores")}</button>
         </div>
       </div>
     );
@@ -227,21 +228,21 @@ export default function CartPage() {
     <div className="page animate-fade-in">
       <div className="container">
         <div className="page-header">
-          <h1>Your Cart</h1>
-          <p>Review your items and proceed to checkout.</p>
+          <h1>{t("Your Cart")}</h1>
+          <p>{t("Review your items and proceed to checkout.")}</p>
         </div>
 
         <div className="cart-layout">
           {/* Cart Items */}
           <div className="glass-card">
             <div className="flex items-center justify-between" style={{ marginBottom: '1rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.75rem' }}>
-              <h3 style={{ fontSize: '1.25rem' }}>Items from {cart.store?.name || 'Store'}</h3>
-              <span className="badge badge-primary">{cart.items.length} items</span>
+              <h3 style={{ fontSize: '1.25rem' }}>{t("Items from ")}{cart.store?.name || t("Store")}</h3>
+              <span className="badge badge-primary">{cart.items.length} {t(" items")}</span>
             </div>
 
             <div style={{ marginTop: '1rem' }}>
               {cart.items.map((item: any) => {
-                const itemName = item.product?.name || item.productName || 'Product';
+                const itemName = item.product?.name || item.productName || t('Product');
                 const itemImg = item.productImage;
                 const price = item.productPrice;
                 const lineTotal = (parseFloat(price) * item.quantity).toFixed(2);
@@ -274,14 +275,14 @@ export default function CartPage() {
                             cursor: 'pointer',
                             padding: 4,
                           }}
-                          title="Remove item"
+                          title={t("Remove item")}
                         >
                           <Trash2 size={18} />
                         </button>
                       </div>
 
                       <div style={{ color: 'var(--accent)', fontWeight: 600, margin: '0.35rem 0' }}>
-                        {price} SAR <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem', fontWeight: 400 }}>each</span>
+                        {price} {t(" SAR ")}<span style={{ color: 'var(--text-muted)', fontSize: '0.8rem', fontWeight: 400 }}>{t("each")}</span>
                       </div>
 
                       <div className="flex justify-between items-center" style={{ marginTop: '0.5rem' }}>
@@ -289,7 +290,7 @@ export default function CartPage() {
                           <button
                             className="qty-btn"
                             onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                            title="Decrease quantity"
+                            title={t("Decrease quantity")}
                           >
                             <Minus size={14} />
                           </button>
@@ -299,15 +300,14 @@ export default function CartPage() {
                           <button
                             className="qty-btn"
                             onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                            title="Increase quantity"
+                            title={t("Increase quantity")}
                           >
                             <Plus size={14} />
                           </button>
                         </div>
 
                         <div style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--text-primary)' }}>
-                          {lineTotal} SAR
-                        </div>
+                          {lineTotal} {t(" SAR")}</div>
                       </div>
                     </div>
                   </div>
@@ -319,12 +319,11 @@ export default function CartPage() {
             <div style={{ marginTop: '1.5rem', paddingTop: '1.5rem', borderTop: '1px solid var(--border)' }}>
               <div className="input-group">
                 <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                  <FileText size={14} /> Order Notes (Optional)
-                </label>
+                  <FileText size={14} /> {t(" Order Notes (Optional)")}</label>
                 <input
                   type="text"
                   className="input"
-                  placeholder="e.g. Leave at door, extra napkins, gate code..."
+                  placeholder={t("e.g. Leave at door, extra napkins, gate code...")}
                   value={orderNotes}
                   onChange={(e) => setOrderNotes(e.target.value)}
                 />
@@ -335,24 +334,24 @@ export default function CartPage() {
           {/* Checkout Summary */}
           <div>
             <div className="glass-card" style={{ position: 'sticky', top: '100px' }}>
-              <h3 style={{ marginBottom: '1.5rem' }}>Order Summary</h3>
+              <h3 style={{ marginBottom: '1.5rem' }}>{t("Order Summary")}</h3>
 
               <div className="checkout-summary-row">
-                <span>Subtotal</span>
-                <span>{subtotal.toFixed(2)} SAR</span>
+                <span>{t("Subtotal")}</span>
+                <span>{subtotal.toFixed(2)} {t(" SAR")}</span>
               </div>
               <div className="checkout-summary-row">
-                <span>Delivery Fee</span>
-                <span>{deliveryFee.toFixed(2)} SAR</span>
+                <span>{t("Delivery Fee")}</span>
+                <span>{deliveryFee.toFixed(2)} {t(" SAR")}</span>
               </div>
 
               <div className="checkout-summary-row total">
-                <span>VAT (15%)</span>
-                <span>{tax.toFixed(2)} SAR</span>
+                <span>{t("VAT (15%)")}</span>
+                <span>{tax.toFixed(2)} {t(" SAR")}</span>
               </div>
               <div className="checkout-summary-row total">
-                <span>Total</span>
-                <span>{orderTotal} SAR</span>
+                <span>{t("Total")}</span>
+                <span>{orderTotal} {t(" SAR")}</span>
               </div>
 
               {/* Delivery Address Section */}
@@ -368,8 +367,7 @@ export default function CartPage() {
                     }}
                   >
                     <MapPin size={16} style={{ color: 'var(--primary-light)' }} />
-                    Delivery Address
-                  </label>
+                    {t("Delivery Address")}</label>
 
                   {addresses.length > 0 && !showAddAddressForm && (
                     <button
@@ -378,8 +376,7 @@ export default function CartPage() {
                       onClick={() => setShowAddAddressForm(true)}
                       style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem', gap: '0.25rem' }}
                     >
-                      <Plus size={13} /> Add New
-                    </button>
+                      <Plus size={13} /> {t(" Add New")}</button>
                   )}
                 </div>
 
@@ -398,7 +395,7 @@ export default function CartPage() {
                         const label = a.label ? `[${a.label}] ` : '';
                         return (
                           <option key={a.id} value={a.id}>
-                            {label}{line}, {city}{area}
+                            {t(label)}{line}, {city}{area}
                           </option>
                         );
                       })}
@@ -419,7 +416,7 @@ export default function CartPage() {
                   >
                     <div className="flex justify-between items-center" style={{ marginBottom: '1rem' }}>
                       <h4 style={{ fontSize: '0.95rem', fontWeight: 600 }}>
-                        {addresses.length === 0 ? 'Add Delivery Address' : 'New Address'}
+                        {addresses.length === 0 ? t("Add Delivery Address") : t("New Address")}
                       </h4>
                       {addresses.length > 0 && (
                         <button
@@ -438,26 +435,26 @@ export default function CartPage() {
 
                     <form onSubmit={handleCreateAddress}>
                       <div className="input-group" style={{ marginBottom: '0.75rem' }}>
-                        <label style={{ fontSize: '0.75rem' }}>Label</label>
+                        <label style={{ fontSize: '0.75rem' }}>{t("Label")}</label>
                         <select
                           className="input"
                           value={newAddress.label}
                           onChange={(e) => setNewAddress({ ...newAddress, label: e.target.value })}
                           style={{ padding: '0.5rem 0.75rem' }}
                         >
-                          <option value="Home">Home</option>
-                          <option value="Work">Work</option>
-                          <option value="Other">Other</option>
+                          <option value="Home">{t("Home")}</option>
+                          <option value="Work">{t("Work")}</option>
+                          <option value="Other">{t("Other")}</option>
                         </select>
                       </div>
 
                       <div className="input-group" style={{ marginBottom: '0.75rem' }}>
-                        <label style={{ fontSize: '0.75rem' }}>Address Line (Street, Building) *</label>
+                        <label style={{ fontSize: '0.75rem' }}>{t("Address Line (Street, Building) *")}</label>
                         <input
                           type="text"
                           className="input"
                           required
-                          placeholder="e.g. King Fahd Rd, Apt 4B"
+                          placeholder={t("e.g. King Fahd Rd, Apt 4B")}
                           value={newAddress.addressLine}
                           onChange={(e) => setNewAddress({ ...newAddress, addressLine: e.target.value })}
                           style={{ padding: '0.5rem 0.75rem' }}
@@ -466,23 +463,23 @@ export default function CartPage() {
 
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginBottom: '0.75rem' }}>
                         <div className="input-group">
-                          <label style={{ fontSize: '0.75rem' }}>City *</label>
+                          <label style={{ fontSize: '0.75rem' }}>{t("City *")}</label>
                           <input
                             type="text"
                             className="input"
                             required
-                            placeholder="e.g. Riyadh"
+                            placeholder={t("e.g. Riyadh")}
                             value={newAddress.city}
                             onChange={(e) => setNewAddress({ ...newAddress, city: e.target.value })}
                             style={{ padding: '0.5rem 0.75rem' }}
                           />
                         </div>
                         <div className="input-group">
-                          <label style={{ fontSize: '0.75rem' }}>Area / District</label>
+                          <label style={{ fontSize: '0.75rem' }}>{t("Area / District")}</label>
                           <input
                             type="text"
                             className="input"
-                            placeholder="e.g. Al Olaya"
+                            placeholder={t("e.g. Al Olaya")}
                             value={newAddress.area}
                             onChange={(e) => setNewAddress({ ...newAddress, area: e.target.value })}
                             style={{ padding: '0.5rem 0.75rem' }}
@@ -502,8 +499,7 @@ export default function CartPage() {
                           htmlFor="isDefaultCheckbox"
                           style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', cursor: 'pointer', margin: 0, textTransform: 'none' }}
                         >
-                          Save as default address
-                        </label>
+                          {t("Save as default address")}</label>
                       </div>
 
                       {addressError && (
@@ -517,7 +513,7 @@ export default function CartPage() {
                             marginBottom: '0.75rem',
                           }}
                         >
-                          {addressError}
+                          {t(addressError)}
                         </div>
                       )}
 
@@ -532,8 +528,7 @@ export default function CartPage() {
                             }}
                             disabled={savingAddress}
                           >
-                            Cancel
-                          </button>
+                            {t("Cancel")}</button>
                         )}
                         <button
                           type="submit"
@@ -543,7 +538,7 @@ export default function CartPage() {
                           {savingAddress ? (
                             <div className="spinner" style={{ width: 14, height: 14, borderWidth: 2 }} />
                           ) : (
-                            'Save Address'
+                            t("Save Address")
                           )}
                         </button>
                       </div>
@@ -561,7 +556,7 @@ export default function CartPage() {
                   <div className="spinner" style={{ width: 20, height: 20, borderWidth: 2 }} />
                 ) : (
                   <>
-                    Proceed to Checkout <ArrowRight size={18} />
+                    {t("Proceed to Checkout ")}<ArrowRight size={18} />
                   </>
                 )}
               </button>

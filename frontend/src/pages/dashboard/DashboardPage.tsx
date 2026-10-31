@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n/I18nContext';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -25,6 +26,7 @@ interface DashboardStats {
 }
 
 export default function DashboardPage() {
+  const { t, locale } = useI18n();
   const { user, hasRole } = useAuth();
 
   // Active view for multi-role accounts
@@ -150,16 +152,16 @@ export default function DashboardPage() {
       await driversApi.setAvailability(nextStatus);
       setDriverOnline(nextStatus === 'ONLINE');
     } catch (err: any) {
-      alert(err.response?.data?.error?.message || 'Failed to update availability');
+      alert(t(err.response?.data?.error?.message || 'Failed to update availability'));
     } finally {
       setDriverToggling(false);
     }
   };
 
   const formatCurrency = (val: string | number | undefined | null) => {
-    if (val === undefined || val === null) return '0 SAR';
+    if (val === undefined || val === null) return t("0 SAR");
     const num = typeof val === 'string' ? parseFloat(val) : val;
-    return new Intl.NumberFormat('en-SA', {
+    return new Intl.NumberFormat(locale, {
       style: 'currency', currency: 'SAR', minimumFractionDigits: 0,
     }).format(num || 0);
   };
@@ -190,13 +192,13 @@ export default function DashboardPage() {
         <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
           <div>
             <h1>
-              Welcome back, <span className="gradient-text">{user?.firstName || 'there'}</span>
+              {t("Welcome back, ")}<span className="gradient-text">{user?.firstName || t("there")}</span>
             </h1>
             <p style={{ marginTop: '0.25rem' }}>
-              {activeTab === 'ADMIN' && "Here's what's happening across the platform today."}
-              {activeTab === 'MERCHANT' && "Manage your store orders and monitor daily performance."}
-              {activeTab === 'DRIVER' && "Track your delivery shifts, earnings, and active tasks."}
-              {activeTab === 'CUSTOMER' && "Explore tasty meals, track active orders, and visit your favorite stores."}
+              {activeTab === 'ADMIN' && t("Here's what's happening across the platform today.")}
+              {activeTab === 'MERCHANT' && t("Manage your store orders and monitor daily performance.")}
+              {activeTab === 'DRIVER' && t("Track your delivery shifts, earnings, and active tasks.")}
+              {activeTab === 'CUSTOMER' && t("Explore tasty meals, track active orders, and visit your favorite stores.")}
             </p>
           </div>
 
@@ -209,10 +211,10 @@ export default function DashboardPage() {
                   className={`filter-chip ${activeTab === role ? 'active' : ''}`}
                   onClick={() => setActiveTab(role)}
                 >
-                  {role === 'ADMIN' && 'Admin View'}
-                  {role === 'MERCHANT' && 'Merchant View'}
-                  {role === 'DRIVER' && 'Driver View'}
-                  {role === 'CUSTOMER' && 'Customer View'}
+                  {role === 'ADMIN' && t("Admin View")}
+                  {role === 'MERCHANT' && t("Merchant View")}
+                  {role === 'DRIVER' && t("Driver View")}
+                  {role === 'CUSTOMER' && t("Customer View")}
                 </button>
               ))}
             </div>
@@ -222,7 +224,7 @@ export default function DashboardPage() {
         {loading ? (
           <div className="loading-screen" style={{ minHeight: '300px' }}>
             <div className="spinner" />
-            <p style={{ color: 'var(--text-secondary)' }}>Loading your dashboard...</p>
+            <p style={{ color: 'var(--text-secondary)' }}>{t("Loading your dashboard...")}</p>
           </div>
         ) : (
           <>
@@ -237,7 +239,7 @@ export default function DashboardPage() {
                     <div className="flex items-center justify-between">
                       <div>
                         <div className="stat-value">{formatCurrency(adminStats.revenue_today)}</div>
-                        <div className="stat-label">Revenue Today</div>
+                        <div className="stat-label">{t("Revenue Today")}</div>
                       </div>
                       <div className="stat-icon" style={{ background: 'rgba(0, 230, 118, 0.12)', color: 'var(--success)' }}>
                         <DollarSign size={24} />
@@ -249,7 +251,7 @@ export default function DashboardPage() {
                     <div className="flex items-center justify-between">
                       <div>
                         <div className="stat-value">{adminStats.orders_today}</div>
-                        <div className="stat-label">Orders Today</div>
+                        <div className="stat-label">{t("Orders Today")}</div>
                       </div>
                       <div className="stat-icon" style={{ background: 'rgba(0, 210, 255, 0.12)', color: 'var(--accent)' }}>
                         <ShoppingBag size={24} />
@@ -261,7 +263,7 @@ export default function DashboardPage() {
                     <div className="flex items-center justify-between">
                       <div>
                         <div className="stat-value">{adminStats.online_drivers}</div>
-                        <div className="stat-label">Online Drivers</div>
+                        <div className="stat-label">{t("Online Drivers")}</div>
                       </div>
                       <div className="stat-icon">
                         <Truck size={24} />
@@ -273,7 +275,7 @@ export default function DashboardPage() {
                     <div className="flex items-center justify-between">
                       <div>
                         <div className="stat-value">{adminStats.pending_orders}</div>
-                        <div className="stat-label">Pending Orders</div>
+                        <div className="stat-label">{t("Pending Orders")}</div>
                       </div>
                       <div className="stat-icon" style={{ background: 'rgba(255, 183, 77, 0.12)', color: 'var(--warning)' }}>
                         <Clock size={24} />
@@ -289,7 +291,7 @@ export default function DashboardPage() {
                       <Users size={18} className="stat-mini-icon" />
                       <div>
                         <div className="stat-mini-value">{adminStats.total_users}</div>
-                        <div className="stat-mini-label">Total Users</div>
+                        <div className="stat-mini-label">{t("Total Users")}</div>
                       </div>
                     </div>
                   </div>
@@ -298,7 +300,7 @@ export default function DashboardPage() {
                       <Store size={18} className="stat-mini-icon" />
                       <div>
                         <div className="stat-mini-value">{adminStats.active_stores}</div>
-                        <div className="stat-mini-label">Active Stores</div>
+                        <div className="stat-mini-label">{t("Active Stores")}</div>
                       </div>
                     </div>
                   </div>
@@ -307,7 +309,7 @@ export default function DashboardPage() {
                       <Package size={18} className="stat-mini-icon" />
                       <div>
                         <div className="stat-mini-value">{adminStats.active_products}</div>
-                        <div className="stat-mini-label">Products</div>
+                        <div className="stat-mini-label">{t("Products")}</div>
                       </div>
                     </div>
                   </div>
@@ -316,7 +318,7 @@ export default function DashboardPage() {
                       <TrendingUp size={18} className="stat-mini-icon" />
                       <div>
                         <div className="stat-mini-value">{formatCurrency(adminStats.total_revenue)}</div>
-                        <div className="stat-mini-label">Total Revenue</div>
+                        <div className="stat-mini-label">{t("Total Revenue")}</div>
                       </div>
                     </div>
                   </div>
@@ -325,9 +327,9 @@ export default function DashboardPage() {
                 {/* Admin Recent Orders */}
                 <div className="glass-card" style={{ marginTop: '2rem' }}>
                   <div className="flex items-center justify-between" style={{ marginBottom: '1rem' }}>
-                    <h3>Recent Platform Orders</h3>
+                    <h3>{t("Recent Platform Orders")}</h3>
                     <Link to="/admin/orders" className="btn btn-ghost btn-sm">
-                      View All Orders <ChevronRight size={16} />
+                      {t("View All Orders ")}<ChevronRight size={16} />
                     </Link>
                   </div>
 
@@ -336,10 +338,10 @@ export default function DashboardPage() {
                       <table>
                         <thead>
                           <tr>
-                            <th>Order #</th>
-                            <th>Status</th>
-                            <th>Total</th>
-                            <th>Date</th>
+                            <th>{t("Order #")}</th>
+                            <th>{t("Status")}</th>
+                            <th>{t("Total")}</th>
+                            <th>{t("Date")}</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -348,12 +350,12 @@ export default function DashboardPage() {
                               <td style={{ fontWeight: 600 }}>{order.order_number}</td>
                               <td>
                                 <span className={`badge ${getStatusBadge(order.status)}`}>
-                                  {order.status}
+                                  {t(order.status)}
                                 </span>
                               </td>
                               <td>{formatCurrency(order.total)}</td>
                               <td style={{ color: 'var(--text-muted)' }}>
-                                {new Date(order.created_at).toLocaleDateString()}
+                                {new Date(order.created_at).toLocaleDateString(locale)}
                               </td>
                             </tr>
                           ))}
@@ -363,8 +365,8 @@ export default function DashboardPage() {
                   ) : (
                     <div className="empty-state">
                       <ShoppingBag size={48} />
-                      <h3>No orders yet</h3>
-                      <p>Orders will appear here once they are placed.</p>
+                      <h3>{t("No orders yet")}</h3>
+                      <p>{t("Orders will appear here once they are placed.")}</p>
                     </div>
                   )}
                 </div>
@@ -388,21 +390,19 @@ export default function DashboardPage() {
                           <div>
                             <div className="flex items-center gap-2">
                               <h2 style={{ margin: 0, fontSize: '1.4rem' }}>{merchantStore.name}</h2>
-                              <span className="badge badge-success">Active Store</span>
+                              <span className="badge badge-success">{t("Active Store")}</span>
                             </div>
                             <p style={{ margin: '0.25rem 0 0', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-                              {merchantStore.address || merchantStore.city || 'Store open for orders'}
+                              {merchantStore.address || merchantStore.city || t("Store open for orders")}
                             </p>
                           </div>
                         </div>
 
                         <div className="flex gap-2">
                           <Link to="/merchant/orders" className="btn btn-primary btn-sm">
-                            <ShoppingBag size={16} /> Manage Orders
-                          </Link>
+                            <ShoppingBag size={16} /> {t(" Manage Orders")}</Link>
                           <Link to="/merchant/settings" className="btn btn-ghost btn-sm">
-                            Store Settings
-                          </Link>
+                            {t("Store Settings")}</Link>
                         </div>
                       </div>
                     </div>
@@ -413,7 +413,7 @@ export default function DashboardPage() {
                         <div className="flex items-center justify-between">
                           <div>
                             <div className="stat-value">{merchantTodayOrders}</div>
-                            <div className="stat-label">Today's Orders</div>
+                            <div className="stat-label">{t("Today's Orders")}</div>
                           </div>
                           <div className="stat-icon" style={{ background: 'rgba(0, 210, 255, 0.12)', color: 'var(--accent)' }}>
                             <ShoppingBag size={24} />
@@ -427,7 +427,7 @@ export default function DashboardPage() {
                             <div className="stat-value" style={{ color: merchantPendingOrders > 0 ? 'var(--warning)' : 'inherit' }}>
                               {merchantPendingOrders}
                             </div>
-                            <div className="stat-label">Pending Orders</div>
+                            <div className="stat-label">{t("Pending Orders")}</div>
                           </div>
                           <div className="stat-icon" style={{ background: 'rgba(255, 183, 77, 0.12)', color: 'var(--warning)' }}>
                             <Clock size={24} />
@@ -441,7 +441,7 @@ export default function DashboardPage() {
                             <div className="stat-value" style={{ color: 'var(--success)' }}>
                               {formatCurrency(merchantTodayRevenue)}
                             </div>
-                            <div className="stat-label">Today's Revenue</div>
+                            <div className="stat-label">{t("Today's Revenue")}</div>
                           </div>
                           <div className="stat-icon" style={{ background: 'rgba(0, 230, 118, 0.12)', color: 'var(--success)' }}>
                             <DollarSign size={24} />
@@ -453,7 +453,7 @@ export default function DashboardPage() {
                         <div className="flex items-center justify-between">
                           <div>
                             <div className="stat-value">{merchantOrders.length}</div>
-                            <div className="stat-label">Total Orders</div>
+                            <div className="stat-label">{t("Total Orders")}</div>
                           </div>
                           <div className="stat-icon">
                             <ChefHat size={24} />
@@ -466,13 +466,13 @@ export default function DashboardPage() {
                     <div className="glass-card">
                       <div className="flex items-center justify-between" style={{ marginBottom: '1.25rem' }}>
                         <div>
-                          <h3 style={{ margin: 0 }}>Recent Store Orders</h3>
+                          <h3 style={{ margin: 0 }}>{t("Recent Store Orders")}</h3>
                           <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                            Orders placed at {merchantStore.name}
+                            {t("Orders placed at ")}{merchantStore.name}
                           </span>
                         </div>
                         <Link to="/merchant/orders" className="btn btn-ghost btn-sm">
-                          View All ({merchantOrders.length}) <ChevronRight size={16} />
+                          {t("View All (")}{merchantOrders.length}) <ChevronRight size={16} />
                         </Link>
                       </div>
 
@@ -481,12 +481,12 @@ export default function DashboardPage() {
                           <table>
                             <thead>
                               <tr>
-                                <th>Order #</th>
-                                <th>Status</th>
-                                <th>Items</th>
-                                <th>Total</th>
-                                <th>Date</th>
-                                <th>Action</th>
+                                <th>{t("Order #")}</th>
+                                <th>{t("Status")}</th>
+                                <th>{t("Items")}</th>
+                                <th>{t("Total")}</th>
+                                <th>{t("Date")}</th>
+                                <th>{t("Action")}</th>
                               </tr>
                             </thead>
                             <tbody>
@@ -495,18 +495,17 @@ export default function DashboardPage() {
                                   <td style={{ fontWeight: 600 }}>{order.order_number}</td>
                                   <td>
                                     <span className={`badge ${getStatusBadge(order.status)}`}>
-                                      {order.status}
+                                      {t(order.status)}
                                     </span>
                                   </td>
-                                  <td>{order.items?.length || 1} items</td>
+                                  <td>{order.items?.length || 1} {t(" items")}</td>
                                   <td style={{ fontWeight: 700 }}>{formatCurrency(order.total)}</td>
                                   <td style={{ color: 'var(--text-muted)' }}>
-                                    {new Date(order.created_at).toLocaleString()}
+                                    {new Date(order.created_at).toLocaleString(locale)}
                                   </td>
                                   <td>
                                     <Link to="/merchant/orders" className="btn btn-ghost btn-sm" style={{ padding: '0.25rem 0.5rem' }}>
-                                      Manage
-                                    </Link>
+                                      {t("Manage")}</Link>
                                   </td>
                                 </tr>
                               ))}
@@ -516,8 +515,8 @@ export default function DashboardPage() {
                       ) : (
                         <div className="empty-state">
                           <ShoppingBag size={48} />
-                          <h3>No orders received yet</h3>
-                          <p>When customers order from your store, they will appear here immediately.</p>
+                          <h3>{t("No orders received yet")}</h3>
+                          <p>{t("When customers order from your store, they will appear here immediately.")}</p>
                         </div>
                       )}
                     </div>
@@ -525,11 +524,10 @@ export default function DashboardPage() {
                 ) : (
                   <div className="glass-card empty-state">
                     <Store size={64} />
-                    <h3>No Store Configured</h3>
-                    <p>Create or configure your store to start receiving customer orders.</p>
+                    <h3>{t("No Store Configured")}</h3>
+                    <p>{t("Create or configure your store to start receiving customer orders.")}</p>
                     <Link to="/merchant/settings" className="btn btn-primary" style={{ marginTop: '1rem' }}>
-                      Set Up Your Store
-                    </Link>
+                      {t("Set Up Your Store")}</Link>
                   </div>
                 )}
               </>
@@ -549,13 +547,13 @@ export default function DashboardPage() {
                     <div>
                       <div className="flex items-center gap-2">
                         <h2 style={{ margin: 0, fontSize: '1.25rem' }}>
-                          Status: <span style={{ color: driverOnline ? 'var(--success)' : 'var(--text-muted)' }}>{driverOnline ? 'ONLINE' : 'OFFLINE'}</span>
+                          {t("Status: ")}<span style={{ color: driverOnline ? 'var(--success)' : 'var(--text-muted)' }}>{driverOnline ? t("ONLINE") : t("OFFLINE")}</span>
                         </h2>
                       </div>
                       <p style={{ margin: '0.2rem 0 0', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
                         {driverOnline
-                          ? 'You are active and receiving delivery requests from nearby stores.'
-                          : 'You are offline. Switch to online to receive new delivery assignments.'}
+                          ? t("You are active and receiving delivery requests from nearby stores.")
+                          : t("You are offline. Switch to online to receive new delivery assignments.")}
                       </p>
                     </div>
                   </div>
@@ -567,11 +565,10 @@ export default function DashboardPage() {
                       disabled={driverToggling}
                     >
                       {driverOnline ? <WifiOff size={16} /> : <Wifi size={16} />}
-                      {driverOnline ? 'Go Offline' : 'Go Online Now'}
+                      {driverOnline ? t("Go Offline") : t("Go Online Now")}
                     </button>
                     <Link to="/driver/deliveries" className="btn btn-accent">
-                      <Truck size={16} /> Open Deliveries
-                    </Link>
+                      <Truck size={16} /> {t(" Open Deliveries")}</Link>
                   </div>
                 </div>
 
@@ -581,7 +578,7 @@ export default function DashboardPage() {
                     <div className="flex items-center justify-between">
                       <div>
                         <div className="stat-value">{driverTodayDeliveries}</div>
-                        <div className="stat-label">Today's Deliveries</div>
+                        <div className="stat-label">{t("Today's Deliveries")}</div>
                       </div>
                       <div className="stat-icon" style={{ background: 'rgba(0, 210, 255, 0.12)', color: 'var(--accent)' }}>
                         <Truck size={24} />
@@ -593,7 +590,7 @@ export default function DashboardPage() {
                     <div className="flex items-center justify-between">
                       <div>
                         <div className="stat-value">{driverEarnings?.total_deliveries || 0}</div>
-                        <div className="stat-label">Total Completed</div>
+                        <div className="stat-label">{t("Total Completed")}</div>
                       </div>
                       <div className="stat-icon" style={{ background: 'rgba(108, 92, 231, 0.12)', color: 'var(--primary-light)' }}>
                         <CheckCircle size={24} />
@@ -607,7 +604,7 @@ export default function DashboardPage() {
                         <div className="stat-value" style={{ color: 'var(--success)' }}>
                           {formatCurrency(driverEarnings?.total_earnings || 0)}
                         </div>
-                        <div className="stat-label">Total Earnings</div>
+                        <div className="stat-label">{t("Total Earnings")}</div>
                       </div>
                       <div className="stat-icon" style={{ background: 'rgba(0, 230, 118, 0.12)', color: 'var(--success)' }}>
                         <DollarSign size={24} />
@@ -621,9 +618,9 @@ export default function DashboardPage() {
                         <div className="stat-value">
                           {driverEarnings && driverEarnings.total_deliveries > 0
                             ? formatCurrency(driverEarnings.total_earnings / driverEarnings.total_deliveries)
-                            : '0 SAR'}
+                            : t("0 SAR")}
                         </div>
-                        <div className="stat-label">Avg / Delivery</div>
+                        <div className="stat-label">{t("Avg / Delivery")}</div>
                       </div>
                       <div className="stat-icon">
                         <TrendingUp size={24} />
@@ -636,13 +633,12 @@ export default function DashboardPage() {
                 <div className="glass-card">
                   <div className="flex items-center justify-between" style={{ marginBottom: '1.25rem' }}>
                     <div>
-                      <h3 style={{ margin: 0 }}>Recent Deliveries</h3>
+                      <h3 style={{ margin: 0 }}>{t("Recent Deliveries")}</h3>
                       <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                        Completed delivery tasks and earnings
-                      </span>
+                        {t("Completed delivery tasks and earnings")}</span>
                     </div>
                     <Link to="/driver/history" className="btn btn-ghost btn-sm">
-                      View Full History <ChevronRight size={16} />
+                      {t("View Full History ")}<ChevronRight size={16} />
                     </Link>
                   </div>
 
@@ -656,21 +652,20 @@ export default function DashboardPage() {
                             </div>
                             <div>
                               <div style={{ fontWeight: 600, fontSize: '0.95rem' }}>
-                                {del.store?.name || del.order?.store?.name || 'Partner Store'}
+                                {del.store?.name || del.order?.store?.name || t("Partner Store")}
                               </div>
                               <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                                {new Date(del.completed_at || del.created_at).toLocaleString()}
+                                {new Date(del.completed_at || del.created_at).toLocaleString(locale)}
                               </div>
                             </div>
                           </div>
 
-                          <div style={{ textAlign: 'right' }}>
+                          <div style={{ textAlign: "end" }}>
                             <div style={{ fontWeight: 700, color: 'var(--success)', fontSize: '1.05rem' }}>
                               {formatCurrency(del.delivery_fee || (del.order?.total ? del.order.total * 0.15 : 15))}
                             </div>
                             <span className="badge badge-success" style={{ fontSize: '0.75rem' }}>
-                              Completed
-                            </span>
+                              {t("Completed")}</span>
                           </div>
                         </div>
                       ))}
@@ -678,11 +673,10 @@ export default function DashboardPage() {
                   ) : (
                     <div className="empty-state">
                       <Truck size={48} />
-                      <h3>No delivery tasks yet</h3>
-                      <p>Go online in the Driver Deliveries page to accept your first order.</p>
+                      <h3>{t("No delivery tasks yet")}</h3>
+                      <p>{t("Go online in the Driver Deliveries page to accept your first order.")}</p>
                       <Link to="/driver/deliveries" className="btn btn-primary" style={{ marginTop: '1rem' }}>
-                        Browse Deliveries
-                      </Link>
+                        {t("Browse Deliveries")}</Link>
                     </div>
                   )}
                 </div>
@@ -698,21 +692,17 @@ export default function DashboardPage() {
                 <div className="glass-card animate-scale-in" style={{ marginBottom: '2rem', padding: '2rem', background: 'linear-gradient(135deg, rgba(108, 92, 231, 0.15), rgba(0, 210, 255, 0.08))', border: '1px solid rgba(108, 92, 231, 0.3)', position: 'relative', overflow: 'hidden' }}>
                   <div style={{ maxWidth: '600px' }}>
                     <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.35rem 0.75rem', background: 'rgba(108, 92, 231, 0.2)', borderRadius: 'var(--radius-full)', color: 'var(--primary-light)', fontSize: '0.8rem', fontWeight: 600, marginBottom: '0.75rem' }}>
-                      <Heart size={14} fill="var(--primary-light)" /> Fast & Fresh Delivery in Saudi Arabia
-                    </div>
+                      <Heart size={14} fill="var(--primary-light)" /> {t(" Fast & Fresh Delivery in Saudi Arabia")}</div>
                     <h2 style={{ fontSize: '1.8rem', fontWeight: 800, marginBottom: '0.5rem', lineHeight: 1.25 }}>
-                      Craving something delicious today?
-                    </h2>
+                      {t("Craving something delicious today?")}</h2>
                     <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', marginBottom: '1.25rem' }}>
-                      Order food and groceries from your favorite local restaurants, cafes, and supermarkets delivered straight to your door.
-                    </p>
+                      {t("Order food and groceries from your favorite local restaurants, cafes, and supermarkets delivered straight to your door.")}</p>
                     <div className="flex gap-2">
                       <Link to="/stores" className="btn btn-primary">
-                        Browse Stores <ArrowRight size={16} />
+                        {t("Browse Stores ")}<ArrowRight size={16} />
                       </Link>
                       <Link to="/my-orders" className="btn btn-ghost">
-                        My Orders
-                      </Link>
+                        {t("My Orders")}</Link>
                     </div>
                   </div>
                 </div>
@@ -722,16 +712,15 @@ export default function DashboardPage() {
                   <div className="flex items-center justify-between" style={{ marginBottom: '1.25rem' }}>
                     <div className="flex items-center gap-2">
                       <Star size={20} className="text-warning" fill="var(--warning)" />
-                      <h3 style={{ margin: 0 }}>Favorite Stores & Top Picks</h3>
+                      <h3 style={{ margin: 0 }}>{t("Favorite Stores & Top Picks")}</h3>
                     </div>
                     <Link to="/stores" className="btn btn-ghost btn-sm">
-                      See All Stores <ChevronRight size={16} />
+                      {t("See All Stores ")}<ChevronRight size={16} />
                     </Link>
                   </div>
 
                   <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '1.25rem' }}>
-                    Enjoy exclusive dishes, top-rated meals, and prompt delivery from verified merchant partners.
-                  </p>
+                    {t("Enjoy exclusive dishes, top-rated meals, and prompt delivery from verified merchant partners.")}</p>
 
                   {featuredStores.length > 0 ? (
                     <div className="grid grid-4" style={{ gap: '1rem' }}>
@@ -750,11 +739,11 @@ export default function DashboardPage() {
                               {store.name}
                             </h4>
                             <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                              {store.city || store.address || 'Delicious food & drinks'}
+                              {store.city || store.address || t("Delicious food & drinks")}
                             </p>
                           </div>
                           <div style={{ marginTop: '1rem', fontSize: '0.8rem', color: 'var(--accent)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                            Order Now <ChevronRight size={14} />
+                            {t("Order Now ")}<ChevronRight size={14} />
                           </div>
                         </Link>
                       ))}
@@ -762,8 +751,7 @@ export default function DashboardPage() {
                   ) : (
                     <div style={{ padding: '1.5rem', background: 'var(--bg-tertiary)', borderRadius: 'var(--radius-md)', textAlign: 'center' }}>
                       <p style={{ color: 'var(--text-secondary)', margin: 0 }}>
-                        Explore the stores catalog to find your top rated restaurants and save your favorites!
-                      </p>
+                        {t("Explore the stores catalog to find your top rated restaurants and save your favorites!")}</p>
                     </div>
                   )}
                 </div>
@@ -772,13 +760,12 @@ export default function DashboardPage() {
                 <div className="glass-card">
                   <div className="flex items-center justify-between" style={{ marginBottom: '1.25rem' }}>
                     <div>
-                      <h3 style={{ margin: 0 }}>Your Recent Orders</h3>
+                      <h3 style={{ margin: 0 }}>{t("Your Recent Orders")}</h3>
                       <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                        Track your past deliveries and re-order anytime
-                      </span>
+                        {t("Track your past deliveries and re-order anytime")}</span>
                     </div>
                     <Link to="/my-orders" className="btn btn-ghost btn-sm">
-                      View All Orders <ChevronRight size={16} />
+                      {t("View All Orders ")}<ChevronRight size={16} />
                     </Link>
                   </div>
 
@@ -787,32 +774,31 @@ export default function DashboardPage() {
                       <table>
                         <thead>
                           <tr>
-                            <th>Order #</th>
-                            <th>Store</th>
-                            <th>Status</th>
-                            <th>Total</th>
-                            <th>Date</th>
-                            <th>Action</th>
+                            <th>{t("Order #")}</th>
+                            <th>{t("Store")}</th>
+                            <th>{t("Status")}</th>
+                            <th>{t("Total")}</th>
+                            <th>{t("Date")}</th>
+                            <th>{t("Action")}</th>
                           </tr>
                         </thead>
                         <tbody>
                           {customerOrders.map((order: any) => (
                             <tr key={order.id}>
                               <td style={{ fontWeight: 600 }}>{order.order_number}</td>
-                              <td>{order.store?.name || 'Partner Store'}</td>
+                              <td>{order.store?.name || t("Partner Store")}</td>
                               <td>
                                 <span className={`badge ${getStatusBadge(order.status)}`}>
-                                  {order.status}
+                                  {t(order.status)}
                                 </span>
                               </td>
                               <td style={{ fontWeight: 700 }}>{formatCurrency(order.total)}</td>
                               <td style={{ color: 'var(--text-muted)' }}>
-                                {new Date(order.created_at).toLocaleDateString()}
+                                {new Date(order.created_at).toLocaleDateString(locale)}
                               </td>
                               <td>
                                 <Link to="/my-orders" className="btn btn-ghost btn-sm" style={{ padding: '0.25rem 0.5rem' }}>
-                                  Track
-                                </Link>
+                                  {t("Track")}</Link>
                               </td>
                             </tr>
                           ))}
@@ -822,11 +808,10 @@ export default function DashboardPage() {
                   ) : (
                     <div className="empty-state">
                       <ShoppingBag size={48} />
-                      <h3>No orders placed yet</h3>
-                      <p>Your orders will show up here once you checkout.</p>
+                      <h3>{t("No orders placed yet")}</h3>
+                      <p>{t("Your orders will show up here once you checkout.")}</p>
                       <Link to="/stores" className="btn btn-primary" style={{ marginTop: '1rem' }}>
-                        Browse Stores & Order Now
-                      </Link>
+                        {t("Browse Stores & Order Now")}</Link>
                     </div>
                   )}
                 </div>

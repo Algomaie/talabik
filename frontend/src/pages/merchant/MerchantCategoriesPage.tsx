@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n/I18nContext';
 import { useEffect, useState } from 'react';
 import { categoriesApi, storesApi } from '../../lib/api';
 import { FolderOpen, Plus, Edit2, Trash2, X, Tag } from 'lucide-react';
@@ -12,6 +13,7 @@ interface Category {
 }
 
 export default function MerchantCategoriesPage() {
+  const { t } = useI18n();
   const [categories, setCategories] = useState<Category[]>([]);
   const [storeId, setStoreId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -83,7 +85,7 @@ export default function MerchantCategoriesPage() {
       }
       setShowModal(false);
     } catch (err: any) {
-      alert(err.response?.data?.error?.message || 'Failed to save category');
+      alert(t(err.response?.data?.error?.message || 'Failed to save category'));
       console.error(err);
     } finally {
       setSaving(false);
@@ -91,7 +93,7 @@ export default function MerchantCategoriesPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!window.confirm('Delete this category? Products in it won\'t be deleted.')) return;
+    if (!window.confirm(t('Delete this category? Products in it won\'t be deleted.'))) return;
     try {
       const { api } = await import('../../lib/api');
       await api.delete(`/categories/${id}`);
@@ -111,23 +113,21 @@ export default function MerchantCategoriesPage() {
         <div className="page-header">
           <div className="flex items-center justify-between">
             <div>
-              <h1><FolderOpen size={28} style={{ verticalAlign: 'middle', marginRight: 8 }} /> Categories</h1>
-              <p>Organize your products into categories for easy browsing.</p>
+              <h1><FolderOpen size={28} style={{ verticalAlign: 'middle', marginInlineEnd: 8 }} /> {t(" Categories")}</h1>
+              <p>{t("Organize your products into categories for easy browsing.")}</p>
             </div>
             <button className="btn btn-primary" onClick={openAdd}>
-              <Plus size={18} /> Add Category
-            </button>
+              <Plus size={18} /> {t(" Add Category")}</button>
           </div>
         </div>
 
         {categories.length === 0 ? (
           <div className="glass-card empty-state">
             <Tag size={48} />
-            <h3>No categories yet</h3>
-            <p>Create categories to organize your store's products.</p>
+            <h3>{t("No categories yet")}</h3>
+            <p>{t("Create categories to organize your store's products.")}</p>
             <button className="btn btn-primary" onClick={openAdd} style={{ marginTop: '1rem' }}>
-              <Plus size={18} /> Create First Category
-            </button>
+              <Plus size={18} /> {t(" Create First Category")}</button>
           </div>
         ) : (
           <div className="category-list">
@@ -150,10 +150,10 @@ export default function MerchantCategoriesPage() {
                   </div>
                 </div>
                 <div className="action-btns">
-                  <button className="action-btn" title="Edit" onClick={() => openEdit(cat)}>
+                  <button className="action-btn" title={t("Edit")} onClick={() => openEdit(cat)}>
                     <Edit2 size={16} />
                   </button>
-                  <button className="action-btn danger" title="Delete" onClick={() => handleDelete(cat.id)}>
+                  <button className="action-btn danger" title={t("Delete")} onClick={() => handleDelete(cat.id)}>
                     <Trash2 size={16} />
                   </button>
                 </div>
@@ -168,32 +168,32 @@ export default function MerchantCategoriesPage() {
         <div className="modal-overlay" onClick={() => setShowModal(false)}>
           <div className="modal animate-scale-in" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>{editingCategory ? 'Edit Category' : 'New Category'}</h3>
+              <h3>{editingCategory ? t("Edit Category") : t("New Category")}</h3>
               <button className="action-btn" onClick={() => setShowModal(false)}><X size={18} /></button>
             </div>
             <form onSubmit={handleSubmit} className="flex flex-col gap-3">
               <div className="input-group">
-                <label>Category Name</label>
+                <label>{t("Category Name")}</label>
                 <input
                   className="input"
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  placeholder="e.g. Burgers, Drinks, Desserts"
+                  placeholder={t("e.g. Burgers, Drinks, Desserts")}
                   required
                   autoFocus
                 />
               </div>
               <div className="input-group">
-                <label>Description (optional)</label>
+                <label>{t("Description (optional)")}</label>
                 <input
                   className="input"
                   value={form.description}
                   onChange={(e) => setForm({ ...form, description: e.target.value })}
-                  placeholder="Brief description"
+                  placeholder={t("Brief description")}
                 />
               </div>
               <div className="input-group">
-                <label>Sort Order</label>
+                <label>{t("Sort Order")}</label>
                 <input
                   className="input"
                   type="number"
@@ -203,9 +203,9 @@ export default function MerchantCategoriesPage() {
                 />
               </div>
               <div className="flex gap-2" style={{ marginTop: '1rem' }}>
-                <button type="button" className="btn btn-ghost" onClick={() => setShowModal(false)} style={{ flex: 1 }}>Cancel</button>
+                <button type="button" className="btn btn-ghost" onClick={() => setShowModal(false)} style={{ flex: 1 }}>{t("Cancel")}</button>
                 <button type="submit" className="btn btn-primary" disabled={saving} style={{ flex: 1 }}>
-                  {saving ? <div className="spinner" style={{ width: 18, height: 18, borderWidth: 2 }} /> : (editingCategory ? 'Save Changes' : 'Create Category')}
+                  {saving ? <div className="spinner" style={{ width: 18, height: 18, borderWidth: 2 }} /> : (editingCategory ? t("Save Changes") : t("Create Category"))}
                 </button>
               </div>
             </form>

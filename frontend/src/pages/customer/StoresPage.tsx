@@ -1,9 +1,11 @@
+import { useI18n } from '../../i18n/I18nContext';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { storesApi } from '../../lib/api';
 import { Store as StoreIcon, Star, Clock, MapPin, Search, X } from 'lucide-react';
 
 export default function StoresPage() {
+  const { t } = useI18n();
   const [stores, setStores] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -44,7 +46,7 @@ export default function StoresPage() {
         <div className="container">
           <div className="loading-screen" style={{ minHeight: '40vh' }}>
             <div className="spinner" />
-            <p style={{ color: 'var(--text-secondary)' }}>Discovering stores near you...</p>
+            <p style={{ color: 'var(--text-secondary)' }}>{t("Discovering stores near you...")}</p>
           </div>
         </div>
       </div>
@@ -52,8 +54,8 @@ export default function StoresPage() {
   }
 
   if (error) {
-    return <div className="page"><div role="alert">{error}</div>
-      <button className="btn btn-primary" onClick={loadStores}>Retry</button></div>;
+    return <div className="page"><div role="alert">{t(error)}</div>
+      <button className="btn btn-primary" onClick={loadStores}>{t("Retry")}</button></div>;
   }
 
   return (
@@ -61,8 +63,8 @@ export default function StoresPage() {
       <div className="container">
         {/* Page Header */}
         <div className="page-header">
-          <h1>Restaurants & Stores</h1>
-          <p>Discover the best food and products around you.</p>
+          <h1>{t("Restaurants & Stores")}</h1>
+          <p>{t("Discover the best food and products around you.")}</p>
         </div>
 
         {/* Search Bar at the Top */}
@@ -84,7 +86,7 @@ export default function StoresPage() {
               size={18}
               style={{
                 position: 'absolute',
-                left: '1rem',
+                insetInlineStart: '1rem',
                 color: 'var(--text-muted)',
                 pointerEvents: 'none',
               }}
@@ -92,12 +94,12 @@ export default function StoresPage() {
             <input
               type="text"
               className="input"
-              placeholder="Search stores by name, cuisine, or address..."
+              placeholder={t("Search stores by name, cuisine, or address...")}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               style={{
-                paddingLeft: '2.75rem',
-                paddingRight: searchQuery ? '2.5rem' : '1rem',
+                paddingInlineStart: '2.75rem',
+                paddingInlineEnd: searchQuery ? '2.5rem' : '1rem',
                 height: 48,
                 fontSize: '0.95rem',
                 borderRadius: 'var(--radius-lg)',
@@ -109,7 +111,7 @@ export default function StoresPage() {
                 onClick={() => setSearchQuery('')}
                 style={{
                   position: 'absolute',
-                  right: '0.75rem',
+                  insetInlineEnd: '0.75rem',
                   background: 'none',
                   border: 'none',
                   color: 'var(--text-muted)',
@@ -119,7 +121,7 @@ export default function StoresPage() {
                   alignItems: 'center',
                   justifyContent: 'center',
                 }}
-                title="Clear search"
+                title={t("Clear search")}
               >
                 <X size={18} />
               </button>
@@ -138,15 +140,14 @@ export default function StoresPage() {
               }}
             >
               <span>
-                Found <strong>{filteredStores.length}</strong> {filteredStores.length === 1 ? 'store' : 'stores'} matching "{searchQuery}"
+                {t('Matching stores for "{query}": {count}', { query: searchQuery, count: filteredStores.length })}
               </span>
               <button
                 className="btn btn-ghost btn-sm"
                 onClick={() => setSearchQuery('')}
                 style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem' }}
               >
-                Clear
-              </button>
+                {t("Clear")}</button>
             </div>
           )}
         </div>
@@ -188,7 +189,7 @@ export default function StoresPage() {
                       </h3>
                       <div className="badge badge-warning">
                         <Star size={12} style={{ fill: 'currentColor' }} />
-                        <span>{rating ? Number(rating).toFixed(1) : 'New'}</span>
+                        <span>{rating ? Number(rating).toFixed(1) : t("New")}</span>
                       </div>
                     </div>
 
@@ -204,7 +205,7 @@ export default function StoresPage() {
                         minHeight: '2.5em',
                       }}
                     >
-                      {store.description || 'Quality food and products delivered to your door.'}
+                      {store.description || t("Quality food and products delivered to your door.")}
                     </p>
 
                     <div
@@ -212,11 +213,10 @@ export default function StoresPage() {
                       style={{ fontSize: '0.8rem', color: 'var(--text-muted)', borderTop: '1px solid var(--border)', paddingTop: '0.75rem' }}
                     >
                       <span className="flex items-center gap-1" style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        <MapPin size={14} style={{ flexShrink: 0 }} /> {store.address || 'Riyadh'}
+                        <MapPin size={14} style={{ flexShrink: 0 }} /> {store.address || t("Riyadh")}
                       </span>
                       <span className="flex items-center gap-1" style={{ flexShrink: 0 }}>
-                        <Clock size={14} /> 20-30 min
-                      </span>
+                        <Clock size={14} /> {t(" 20-30 min")}</span>
                     </div>
                   </div>
                 </div>
@@ -227,22 +227,21 @@ export default function StoresPage() {
           /* Search yielded no matches */
           <div className="glass-card empty-state">
             <Search size={56} style={{ color: 'var(--text-muted)', opacity: 0.5 }} />
-            <h3>No stores found</h3>
-            <p>No restaurants or stores match "{searchQuery}". Try a different keyword.</p>
+            <h3>{t("No stores found")}</h3>
+            <p>{t("No restaurants or stores match \"")}{searchQuery}{t("\". Try a different keyword.")}</p>
             <button
               className="btn btn-ghost"
               onClick={() => setSearchQuery('')}
               style={{ marginTop: '1rem' }}
             >
-              Clear Search
-            </button>
+              {t("Clear Search")}</button>
           </div>
         ) : (
           /* Zero stores on platform */
           <div className="glass-card empty-state">
             <StoreIcon size={64} style={{ opacity: 0.4 }} />
-            <h3>No stores found</h3>
-            <p>Check back later for new stores in your area.</p>
+            <h3>{t("No stores found")}</h3>
+            <p>{t("Check back later for new stores in your area.")}</p>
           </div>
         )}
       </div>

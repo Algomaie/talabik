@@ -1,10 +1,13 @@
+import { useI18n } from '../../i18n/I18nContext';
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { Package, Eye, EyeOff, ArrowRight } from 'lucide-react';
 import './Auth.css';
+import LanguageSwitcher from '../../components/LanguageSwitcher';
 
 export default function LoginPage() {
+  const { t } = useI18n();
   const { login } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
@@ -29,6 +32,7 @@ export default function LoginPage() {
 
   return (
     <div className="auth-page">
+      <div className="auth-language"><LanguageSwitcher /></div>
       <div className="auth-bg-orbs">
         <div className="orb orb-1" />
         <div className="orb orb-2" />
@@ -40,18 +44,18 @@ export default function LoginPage() {
           <div className="auth-logo">
             <Package size={32} />
           </div>
-          <h1>Talbak</h1>
-          <p>Delivery Platform</p>
+          <h1>{t("Talbak")}</h1>
+          <p>{t("Delivery Platform")}</p>
         </div>
 
         <form onSubmit={handleSubmit} className="auth-form">
-          <h2>Welcome Back</h2>
-          <p className="auth-subtitle">Sign in to your account</p>
+          <h2>{t("Welcome Back")}</h2>
+          <p className="auth-subtitle">{t("Sign in to your account")}</p>
 
-          {error && <div role="alert" className="auth-error animate-fade-in">{error}</div>}
+          {error && <div role="alert" className="auth-error animate-fade-in">{t(error)}</div>}
 
           <div className="input-group">
-            <label htmlFor="email">Email</label>
+            <label htmlFor="email">{t("Email")}</label>
             <input
               id="email"
               type="email"
@@ -65,7 +69,7 @@ export default function LoginPage() {
           </div>
 
           <div className="input-group">
-            <label htmlFor="password">Password</label>
+            <label htmlFor="password">{t("Password")}</label>
             <div className="password-wrapper">
               <input
                 id="password"
@@ -76,7 +80,7 @@ export default function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
               />
-              <button type="button" aria-label={showPw ? 'Hide password' : 'Show password'} className="pw-toggle" onClick={() => setShowPw(!showPw)}>
+              <button type="button" aria-label={showPw ? t("Hide password") : t("Show password")} className="pw-toggle" onClick={() => setShowPw(!showPw)}>
                 {showPw ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
@@ -84,12 +88,12 @@ export default function LoginPage() {
 
           <button type="submit" className="btn btn-primary btn-block btn-lg" disabled={loading}>
             {loading ? <div className="spinner" style={{ width: 20, height: 20, borderWidth: 2 }} /> : (
-              <>Sign In <ArrowRight size={18} /></>
+              <>{t("Sign In ")}<ArrowRight size={18} /></>
             )}
           </button>
 
           {import.meta.env.DEV && <div className="auth-demo">
-            <p>Demo Accounts:</p>
+            <p>{t("Demo Accounts:")}</p>
             <div className="demo-accounts">
               {[
                 { label: 'Admin', email: 'admin@talbak.com' },
@@ -103,14 +107,14 @@ export default function LoginPage() {
                   className="demo-btn"
                   onClick={() => { setEmail(acc.email); setPassword('Demo@1234'); }}
                 >
-                  {acc.label}
+                  {t(acc.label)}
                 </button>
               ))}
             </div>
           </div>}
 
           <p className="auth-footer">
-            Don't have an account? <Link to="/register">Create one</Link>
+            {t("Don't have an account? ")}<Link to="/register">{t("Create one")}</Link>
           </p>
         </form>
       </div>

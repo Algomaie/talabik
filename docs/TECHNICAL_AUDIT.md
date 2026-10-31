@@ -2,6 +2,8 @@
 
 The [security follow-up](SECURITY_REVIEW.md) supersedes the original review for dependency versions, session revocation, account approval and driver acceptance concurrency. Its full dependency audit includes development tools.
 
+The subsequent [localization follow-up](LOCALIZATION.md) adds Arabic/English interfaces, RTL, persisted language selection and automated interaction tests. Earlier references below to an English-only UI describe the original audit baseline. Offline IndexedDB submission/synchronization remains unimplemented.
+
 Review date: **31 October 2026 (Asia/Riyadh)**. Working branch: `chore/recruitment-readiness`. This report describes local evidence, not a production certification. The owner subsequently authorized publishing the branch to GitHub. No public application deployment was made.
 
 ## Scope and repository baseline

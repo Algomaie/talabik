@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n/I18nContext';
 import { useEffect, useState } from 'react';
 import { notificationsApi } from '../../lib/api';
 import { Bell, CheckCheck, Package, Truck, ShoppingBag, AlertCircle, Info } from 'lucide-react';
@@ -22,16 +23,18 @@ const typeIcon = (type: string) => {
   }
 };
 
-const timeAgo = (date: string) => {
+const timeAgo = (date: string, locale: string) => {
   const seconds = Math.floor((Date.now() - new Date(date).getTime()) / 1000);
-  if (seconds < 60) return 'Just now';
-  if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
-  if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
-  if (seconds < 604800) return `${Math.floor(seconds / 86400)}d ago`;
-  return new Date(date).toLocaleDateString();
+  const relative = new Intl.RelativeTimeFormat(locale, { numeric: 'auto' });
+  if (seconds < 60) return relative.format(0, 'second');
+  if (seconds < 3600) return relative.format(-Math.floor(seconds / 60), 'minute');
+  if (seconds < 86400) return relative.format(-Math.floor(seconds / 3600), 'hour');
+  if (seconds < 604800) return relative.format(-Math.floor(seconds / 86400), 'day');
+  return new Date(date).toLocaleDateString(locale);
 };
 
 export default function NotificationsPage() {
+  const { t, locale } = useI18n();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -91,25 +94,22 @@ export default function NotificationsPage() {
           <div className="flex items-center justify-between">
             <div>
               <h1>
-                <Bell size={28} style={{ verticalAlign: 'middle', marginRight: 8 }} />
-                Notifications
-              </h1>
-              <p>{unreadCount > 0 ? `You have ${unreadCount} unread notification${unreadCount > 1 ? 's' : ''}` : 'You\'re all caught up!'}</p>
+                <Bell size={28} style={{ verticalAlign: 'middle', marginInlineEnd: 8 }} />
+                {t("Notifications")}</h1>
+              <p>{unreadCount > 0 ? t("You have {v0} unread notification{v1}", { v0: unreadCount, v1: unreadCount > 1 ? 's' : '' }) : t("You're all caught up!")}</p>
             </div>
             {unreadCount > 0 && (
               <button className="btn btn-ghost" onClick={markAllRead}>
-                <CheckCheck size={16} /> Mark all read
-              </button>
+                <CheckCheck size={16} /> {t(" Mark all read")}</button>
             )}
           </div>
         </div>
 
         <div className="admin-filters" style={{ marginBottom: '1.5rem' }}>
           <button className={`filter-chip ${filter === 'all' ? 'active' : ''}`} onClick={() => setFilter('all')}>
-            All
-          </button>
+            {t("All")}</button>
           <button className={`filter-chip ${filter === 'unread' ? 'active' : ''}`} onClick={() => setFilter('unread')}>
-            Unread {unreadCount > 0 && <span className="badge badge-error" style={{ marginLeft: 4, padding: '0 6px', fontSize: '0.65rem' }}>{unreadCount}</span>}
+            {t("Unread ")}{unreadCount > 0 && <span className="badge badge-error" style={{ marginInlineStart: 4, padding: '0 6px', fontSize: '0.65rem' }}>{unreadCount}</span>}
           </button>
         </div>
 
@@ -117,8 +117,8 @@ export default function NotificationsPage() {
           {filtered.length === 0 ? (
             <div className="empty-state" style={{ padding: '3rem' }}>
               <Bell size={48} />
-              <h3>{filter === 'unread' ? 'No unread notifications' : 'No notifications yet'}</h3>
-              <p>Notifications about your orders and deliveries will appear here.</p>
+              <h3>{filter === 'unread' ? t("No unread notifications") : t("No notifications yet")}</h3>
+              <p>{t("Notifications about your orders and deliveries will appear here.")}</p>
             </div>
           ) : (
             filtered.map((notif, idx) => (
@@ -129,13 +129,13 @@ export default function NotificationsPage() {
                 style={{ animationDelay: `${idx * 0.05}s`, animation: 'fadeIn 0.3s ease-out both' }}
               >
                 <div className={`notification-dot ${notif.is_read ? 'read' : ''}`} />
-                <div style={{ marginRight: '0.5rem', marginTop: '2px' }}>
+                <div style={{ marginInlineEnd: '0.5rem', marginTop: '2px' }}>
                   {typeIcon(notif.type)}
                 </div>
                 <div className="notification-content">
-                  <div className="notification-title">{notif.title}</div>
-                  <div className="notification-body">{notif.message}</div>
-                  <div className="notification-time">{timeAgo(notif.created_at)}</div>
+                  <div className="notification-title">{t(notif.title)}</div>
+                  <div className="notification-body">{t(notif.message)}</div>
+                  <div className="notification-time">{timeAgo(notif.created_at, locale)}</div>
                 </div>
               </div>
             ))

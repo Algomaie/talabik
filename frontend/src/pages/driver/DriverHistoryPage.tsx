@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n/I18nContext';
 import { useEffect, useState } from 'react';
 import { deliveriesApi, ordersApi } from '../../lib/api';
 import {
@@ -38,6 +39,7 @@ interface DeliveryHistoryItem {
 }
 
 export default function DriverHistoryPage() {
+  const { t, locale } = useI18n();
   const [history, setHistory] = useState<DeliveryHistoryItem[]>([]);
   const [earnings, setEarnings] = useState<{ total_earnings: number; total_deliveries: number } | null>(null);
   const [loading, setLoading] = useState(true);
@@ -93,9 +95,9 @@ export default function DriverHistoryPage() {
   };
 
   const formatCurrency = (val: number | string | undefined | null) => {
-    if (val === undefined || val === null) return '0.00 SAR';
+    if (val === undefined || val === null) return t("0.00 SAR");
     const num = typeof val === 'string' ? parseFloat(val) : val;
-    return new Intl.NumberFormat('en-SA', { style: 'currency', currency: 'SAR' }).format(num || 0);
+    return new Intl.NumberFormat(locale, { style: 'currency', currency: 'SAR' }).format(num || 0);
   };
 
   if (loading) {
@@ -104,7 +106,7 @@ export default function DriverHistoryPage() {
         <div className="container" style={{ maxWidth: 800 }}>
           <div className="loading-screen">
             <div className="spinner" />
-            <p style={{ color: 'var(--text-secondary)', marginTop: '1rem' }}>Loading delivery history...</p>
+            <p style={{ color: 'var(--text-secondary)', marginTop: '1rem' }}>{t("Loading delivery history...")}</p>
           </div>
         </div>
       </div>
@@ -115,32 +117,32 @@ export default function DriverHistoryPage() {
     <div className="page animate-fade-in">
       <div className="container" style={{ maxWidth: 800 }}>
         <div className="page-header">
-          <h1>Delivery History & Earnings</h1>
-          <p>Track your completed deliveries and total earnings.</p>
+          <h1>{t("Delivery History & Earnings")}</h1>
+          <p>{t("Track your completed deliveries and total earnings.")}</p>
         </div>
 
         {/* Earnings Overview */}
         {earnings && (
           <div className="earnings-hero animate-scale-in">
-            <div className="earnings-label">Total Earnings</div>
+            <div className="earnings-label">{t("Total Earnings")}</div>
             <div className="earnings-amount">{formatCurrency(earnings.total_earnings)}</div>
 
             <div className="earnings-stats">
               <div className="earnings-stat">
                 <div className="earnings-stat-value">{earnings.total_deliveries}</div>
-                <div className="earnings-stat-label">Deliveries</div>
+                <div className="earnings-stat-label">{t("Deliveries")}</div>
               </div>
               <div className="earnings-stat">
                 <div className="earnings-stat-value">
                   {earnings.total_deliveries > 0
                     ? formatCurrency(earnings.total_earnings / earnings.total_deliveries)
-                    : '0.00 SAR'}
+                    : t("0.00 SAR")}
                 </div>
-                <div className="earnings-stat-label">Avg / Delivery</div>
+                <div className="earnings-stat-label">{t("Avg / Delivery")}</div>
               </div>
               <div className="earnings-stat">
                 <div className="earnings-stat-value">100%</div>
-                <div className="earnings-stat-label">Completion</div>
+                <div className="earnings-stat-label">{t("Completion")}</div>
               </div>
             </div>
           </div>
@@ -148,14 +150,13 @@ export default function DriverHistoryPage() {
 
         {/* History List */}
         <h3 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <Calendar size={20} className="text-primary" /> Completed Deliveries
-        </h3>
+          <Calendar size={20} className="text-primary" /> {t(" Completed Deliveries")}</h3>
 
         {history.length === 0 ? (
           <div className="glass-card empty-state">
             <Truck size={48} />
-            <h3>No completed deliveries yet</h3>
-            <p>Your delivery history and earnings will appear here once tasks are completed.</p>
+            <h3>{t("No completed deliveries yet")}</h3>
+            <p>{t("Your delivery history and earnings will appear here once tasks are completed.")}</p>
           </div>
         ) : (
           <div className="flex flex-col gap-3">
@@ -165,9 +166,9 @@ export default function DriverHistoryPage() {
                 : delivery.order?.total
                 ? delivery.order.total * 0.15
                 : 15;
-              const storeTitle = delivery.store?.name || delivery.order?.store?.name || 'Partner Store';
-              const pickupAddr = delivery.store?.address || delivery.pickup_address || 'Store Location';
-              const dropoffAddr = delivery.dropoff_address || delivery.order?.delivery_address || 'Customer Location';
+              const storeTitle = delivery.store?.name || delivery.order?.store?.name || t('Partner Store');
+              const pickupAddr = delivery.store?.address || delivery.pickup_address || t('Store Location');
+              const dropoffAddr = delivery.dropoff_address || delivery.order?.delivery_address || t('Customer Location');
               const orderNum = delivery.order?.order_number || delivery.order_id?.split('-')[0] || delivery.id.slice(0, 8);
 
               return (
@@ -183,12 +184,12 @@ export default function DriverHistoryPage() {
                         </div>
                         <div className="flex items-center gap-1 text-muted" style={{ fontSize: '0.8rem', marginTop: '0.25rem' }}>
                           <Clock size={14} />
-                          {new Date(delivery.completed_at || delivery.created_at).toLocaleString()}
+                          {new Date(delivery.completed_at || delivery.created_at).toLocaleString(locale)}
                         </div>
                       </div>
                     </div>
                     <span className="badge badge-success">
-                      {delivery.status || 'Completed'}
+                      {t(delivery.status) || t("Completed")}
                     </span>
                   </div>
 
@@ -196,7 +197,7 @@ export default function DriverHistoryPage() {
                     <div className="flex items-start gap-2" style={{ marginBottom: '0.75rem' }}>
                       <MapPin size={16} style={{ color: 'var(--primary-light)', marginTop: '2px', flexShrink: 0 }} />
                       <div>
-                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Pickup Store</div>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>{t("Pickup Store")}</div>
                         <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>{storeTitle}</div>
                         <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{pickupAddr}</div>
                       </div>
@@ -205,20 +206,20 @@ export default function DriverHistoryPage() {
                     <div className="flex items-start gap-2">
                       <MapPin size={16} style={{ color: 'var(--accent)', marginTop: '2px', flexShrink: 0 }} />
                       <div>
-                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Drop-off</div>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>{t("Drop-off")}</div>
                         <div style={{ fontWeight: 500, fontSize: '0.9rem' }}>{dropoffAddr}</div>
                       </div>
                     </div>
                   </div>
 
                   <div className="flex justify-between items-center text-muted" style={{ fontSize: '0.825rem' }}>
-                    <span>Order #{orderNum}</span>
+                    <span>{t("Order #")}{orderNum}</span>
                     <button
                       className="btn btn-ghost btn-sm"
                       style={{ color: 'var(--primary-light)', padding: '0.35rem 0.75rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}
                       onClick={() => handleOpenDetails(delivery)}
                     >
-                      View Details <ChevronRight size={16} />
+                      {t("View Details ")}<ChevronRight size={16} />
                     </button>
                   </div>
                 </div>
@@ -233,12 +234,12 @@ export default function DriverHistoryPage() {
             <div className="modal animate-scale-in" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 560 }}>
               <div className="modal-header">
                 <div>
-                  <h3 style={{ margin: 0, fontSize: '1.25rem' }}>Delivery Details</h3>
+                  <h3 style={{ margin: 0, fontSize: '1.25rem' }}>{t("Delivery Details")}</h3>
                   <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                    ID: {selectedDelivery.id}
+                    {t("ID: ")}{selectedDelivery.id}
                   </span>
                 </div>
-                <button className="action-btn" onClick={handleCloseDetails} title="Close">
+                <button className="action-btn" onClick={handleCloseDetails} title={t("Close")}>
                   <X size={18} />
                 </button>
               </div>
@@ -246,7 +247,7 @@ export default function DriverHistoryPage() {
               {/* Status & Earnings Header */}
               <div className="flex justify-between items-center" style={{ background: 'var(--bg-tertiary)', padding: '1rem', borderRadius: 'var(--radius-md)', marginBottom: '1.5rem', border: '1px solid var(--border)' }}>
                 <div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Your Payout</div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>{t("Your Payout")}</div>
                   <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--success)' }}>
                     {formatCurrency(
                       selectedDelivery.delivery_fee ||
@@ -254,12 +255,12 @@ export default function DriverHistoryPage() {
                     )}
                   </div>
                 </div>
-                <div style={{ textAlign: 'right' }}>
+                <div style={{ textAlign: "end" }}>
                   <span className="badge badge-success" style={{ fontSize: '0.85rem', padding: '0.35rem 0.75rem' }}>
-                    {selectedDelivery.status || 'COMPLETED'}
+                    {t(selectedDelivery.status) || t("COMPLETED")}
                   </span>
                   <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.35rem' }}>
-                    Order #{modalOrder?.order_number || selectedDelivery.order?.order_number || selectedDelivery.order_id?.slice(0, 8)}
+                    {t("Order #")}{modalOrder?.order_number || selectedDelivery.order?.order_number || selectedDelivery.order_id?.slice(0, 8)}
                   </div>
                 </div>
               </div>
@@ -267,23 +268,23 @@ export default function DriverHistoryPage() {
               {/* Timestamps */}
               <div className="detail-grid" style={{ marginBottom: '1.5rem' }}>
                 <div className="detail-item">
-                  <label><Clock size={12} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} /> Created At</label>
-                  <span>{new Date(selectedDelivery.created_at).toLocaleString()}</span>
+                  <label><Clock size={12} style={{ display: 'inline', verticalAlign: 'middle', marginInlineEnd: 4 }} /> {t(" Created At")}</label>
+                  <span>{new Date(selectedDelivery.created_at).toLocaleString(locale)}</span>
                 </div>
                 <div className="detail-item">
-                  <label><CheckCircle size={12} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} /> Completed At</label>
+                  <label><CheckCircle size={12} style={{ display: 'inline', verticalAlign: 'middle', marginInlineEnd: 4 }} /> {t(" Completed At")}</label>
                   <span>
                     {selectedDelivery.completed_at
-                      ? new Date(selectedDelivery.completed_at).toLocaleString()
-                      : new Date(selectedDelivery.created_at).toLocaleString()}
+                      ? new Date(selectedDelivery.completed_at).toLocaleString(locale)
+                      : new Date(selectedDelivery.created_at).toLocaleString(locale)}
                   </span>
                 </div>
                 <div className="detail-item">
-                  <label><DollarSign size={12} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} /> Order Total</label>
+                  <label><DollarSign size={12} style={{ display: 'inline', verticalAlign: 'middle', marginInlineEnd: 4 }} /> {t(" Order Total")}</label>
                   <span style={{ fontWeight: 600 }}>{formatCurrency(modalOrder?.total || selectedDelivery.order?.total)}</span>
                 </div>
                 <div className="detail-item">
-                  <label>Delivery Fee</label>
+                  <label>{t("Delivery Fee")}</label>
                   <span>{formatCurrency(modalOrder?.delivery_fee || selectedDelivery.delivery_fee || 15)}</span>
                 </div>
               </div>
@@ -294,12 +295,12 @@ export default function DriverHistoryPage() {
                 <div className="flex items-start gap-2" style={{ marginBottom: '1rem' }}>
                   <Store size={18} style={{ color: 'var(--primary-light)', marginTop: '2px', flexShrink: 0 }} />
                   <div>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>Pickup (Store)</div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>{t("Pickup (Store)")}</div>
                     <div style={{ fontWeight: 600, fontSize: '0.95rem' }}>
-                      {selectedDelivery.store?.name || modalOrder?.store?.name || 'Partner Store'}
+                      {selectedDelivery.store?.name || modalOrder?.store?.name || t("Partner Store")}
                     </div>
                     <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                      {selectedDelivery.store?.address || modalOrder?.store?.address || selectedDelivery.pickup_address || 'Store Location'}
+                      {selectedDelivery.store?.address || modalOrder?.store?.address || selectedDelivery.pickup_address || t("Store Location")}
                     </div>
                   </div>
                 </div>
@@ -308,13 +309,13 @@ export default function DriverHistoryPage() {
                 <div className="flex items-start gap-2" style={{ paddingTop: '0.75rem', borderTop: '1px solid var(--border)' }}>
                   <MapPin size={18} style={{ color: 'var(--accent)', marginTop: '2px', flexShrink: 0 }} />
                   <div>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>Drop-off (Customer)</div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>{t("Drop-off (Customer)")}</div>
                     <div style={{ fontWeight: 500, fontSize: '0.9rem' }}>
-                      {selectedDelivery.dropoff_address || modalOrder?.delivery_address || selectedDelivery.order?.delivery_address || 'Customer Location'}
+                      {selectedDelivery.dropoff_address || modalOrder?.delivery_address || selectedDelivery.order?.delivery_address || t("Customer Location")}
                     </div>
                     {modalOrder?.user && (
                       <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
-                        Customer: {modalOrder.user.first_name} {modalOrder.user.last_name || ''}
+                        {t("Customer: ")}{modalOrder.user.first_name} {modalOrder.user.last_name || ''}
                       </div>
                     )}
                   </div>
@@ -324,19 +325,17 @@ export default function DriverHistoryPage() {
               {/* Order Items List */}
               <div style={{ marginBottom: '1.5rem' }}>
                 <h4 style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                  <ShoppingBag size={14} /> Order Items
-                </h4>
+                  <ShoppingBag size={14} /> {t(" Order Items")}</h4>
 
                 {modalLoading ? (
                   <div style={{ padding: '1rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
-                    Loading order items...
-                  </div>
+                    {t("Loading order items...")}</div>
                 ) : modalOrder?.items && modalOrder.items.length > 0 ? (
                   <div style={{ background: 'var(--bg-tertiary)', borderRadius: 'var(--radius-md)', padding: '0.75rem 1rem', border: '1px solid var(--border)' }}>
                     {modalOrder.items.map((item: any, idx: number) => (
                       <div key={item.id || idx} className="flex justify-between items-center" style={{ padding: '0.4rem 0', borderBottom: idx !== modalOrder.items.length - 1 ? '1px solid var(--border)' : 'none', fontSize: '0.875rem' }}>
                         <span>
-                          <strong style={{ color: 'var(--primary-light)' }}>{item.quantity}x</strong> {item.product?.name || item.name || 'Order Item'}
+                          <strong style={{ color: 'var(--primary-light)' }}>{item.quantity}{t("x")}</strong> {item.product?.name || item.name || t("Order Item")}
                         </span>
                         <span style={{ color: 'var(--text-secondary)' }}>
                           {formatCurrency(item.unit_price || item.product?.price)}
@@ -346,15 +345,14 @@ export default function DriverHistoryPage() {
                   </div>
                 ) : (
                   <div style={{ padding: '0.75rem 1rem', background: 'var(--bg-tertiary)', borderRadius: 'var(--radius-md)', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                    No specific item records attached to this historical order.
-                  </div>
+                    {t("No specific item records attached to this historical order.")}</div>
                 )}
               </div>
 
               {/* Customer Notes */}
               {modalOrder?.notes && (
                 <div style={{ padding: '0.875rem', background: 'var(--bg-tertiary)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', marginBottom: '1.5rem', fontSize: '0.85rem' }}>
-                  <strong style={{ color: 'var(--warning)', display: 'block', marginBottom: '0.25rem' }}>Delivery Notes:</strong>
+                  <strong style={{ color: 'var(--warning)', display: 'block', marginBottom: '0.25rem' }}>{t("Delivery Notes:")}</strong>
                   <span style={{ color: 'var(--text-secondary)' }}>{modalOrder.notes}</span>
                 </div>
               )}
@@ -362,8 +360,7 @@ export default function DriverHistoryPage() {
               {/* Modal Footer */}
               <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: '1rem', borderTop: '1px solid var(--border)' }}>
                 <button className="btn btn-primary" onClick={handleCloseDetails}>
-                  Close
-                </button>
+                  {t("Close")}</button>
               </div>
             </div>
           </div>

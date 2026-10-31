@@ -15,12 +15,12 @@
 }
 
 .admin-search .input {
-  padding-left: 2.75rem;
+  padding-inline-start: 2.75rem;
 }
 
 .admin-search svg {
   position: absolute;
-  left: 1rem;
+  inset-inline-start: 1rem;
   top: 50%;
   transform: translateY(-50%);
   color: var(--text-muted);
@@ -92,7 +92,7 @@
   height: 8px;
   border-radius: 50%;
   display: inline-block;
-  margin-right: 0.5rem;
+  margin-inline-end: 0.5rem;
 }
 
 .status-dot.active { background: var(--success); }
@@ -256,7 +256,7 @@
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  left: 2px;
+  inset-inline-start: 2px;
   bottom: 2px;
   background: var(--text-muted);
   transition: all 0.3s;
@@ -270,6 +270,10 @@
 .toggle-switch input:checked + .toggle-slider::before {
   transform: translateX(22px);
   background: white;
+}
+
+html[dir="rtl"] .toggle-switch input:checked + .toggle-slider::before {
+  transform: translateX(-22px);
 }
 
 /* ─── Notifications Page ──────────────────────────────────────── */

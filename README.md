@@ -7,6 +7,7 @@ This is a portfolio implementation, not a production-readiness certification. Re
 ## Implemented features
 
 - React Router, [AuthContext](frontend/src/context/AuthContext.tsx), role-aware layout and customer/merchant/driver/admin pages.
+- Arabic and English interfaces, a persistent language switcher, RTL layout and locale-aware dates. See [localization](docs/LOCALIZATION.md) and its [interaction tests](frontend/tests/I18n.test.tsx).
 - [StoresPage](frontend/src/pages/customer/StoresPage.tsx): REST loading, error/retry, successful results, search and empty states, with [interaction tests](frontend/tests/StoresPage.test.tsx).
 - JWT access/refresh authentication, Argon2 passwords, Zod validation, role and resource ownership checks.
 - PostgreSQL migrations, foreign keys, inventory constraints, connection pooling and transactions.
@@ -39,7 +40,7 @@ Express routes -> validation/auth/RBAC -> services -> repositories
 ## Project structure
 
 ```text
-frontend/src/{components,context,lib,pages}  React application
+frontend/src/{components,context,i18n,lib,pages}  React application
 frontend/tests/                            DOM interaction tests
 backend/src/modules/                       Domain routes/services/repositories
 backend/src/common/                        Middleware/errors/utilities
@@ -180,5 +181,5 @@ Full dependency scans now include development tools. Run `npm audit --prefix bac
 - Development can continue without Redis, but session refresh/revocation/rate limiting then lose their normal guarantees. Production startup requires Redis and security-store failures return 503.
 - Browser tokens use localStorage, so successful XSS can expose them. Cookie sessions need a separate design including CSRF handling.
 - Driver lifecycle concurrency, crash-safe migrations, broader browser tests and page error handling need further work; see the audit.
-- UI is currently English. Arabic RTL offline forms and IndexedDB synchronization are not implemented.
+- The UI supports Arabic/English and RTL. IndexedDB storage, offline submission and background synchronization are not implemented; see the separate assessment preparation guide.
 - No production load result, public demo, SLA, personal contribution or fabricated history is asserted.

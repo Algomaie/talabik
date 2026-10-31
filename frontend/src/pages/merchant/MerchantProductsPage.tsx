@@ -1,9 +1,11 @@
+import { useI18n } from '../../i18n/I18nContext';
 import { useEffect, useState } from 'react';
 import { storesApi, productsApi, categoriesApi, api } from '../../lib/api';
 import { Package, Plus, Edit2, Trash2, Tag, Image as ImageIcon, X, AlertTriangle } from 'lucide-react';
 import '../customer/CustomerPages.css';
 
 export default function MerchantProductsPage() {
+  const { t } = useI18n();
   const [store, setStore] = useState<any>(null);
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -131,7 +133,7 @@ export default function MerchantProductsPage() {
       setFormData({ name: '', description: '', price: '', category_id: '', image_url: '' });
       await loadData();
     } catch (err: any) {
-      alert(err.response?.data?.error?.message || (editingProduct ? 'Failed to update product' : 'Failed to create product'));
+      alert(t(err.response?.data?.error?.message || (editingProduct ? 'Failed to update product' : 'Failed to create product')));
     } finally {
       setFormLoading(false);
     }
@@ -152,7 +154,7 @@ export default function MerchantProductsPage() {
       setProductToDelete(null);
       await loadData();
     } catch (err: any) {
-      alert(err.response?.data?.error?.message || 'Failed to delete product');
+      alert(t(err.response?.data?.error?.message || 'Failed to delete product'));
     } finally {
       setDeleteLoading(false);
     }
@@ -174,8 +176,8 @@ export default function MerchantProductsPage() {
     return (
       <div className="page container animate-fade-in">
         <div className="empty-state glass-card">
-          <h3>No Store Found</h3>
-          <p>You need to create a store first to manage products.</p>
+          <h3>{t("No Store Found")}</h3>
+          <p>{t("You need to create a store first to manage products.")}</p>
         </div>
       </div>
     );
@@ -186,40 +188,38 @@ export default function MerchantProductsPage() {
       <div className="container">
         <div className="page-header flex justify-between items-center" style={{ marginBottom: '2rem' }}>
           <div>
-            <h1>Products</h1>
-            <p>Manage your menu items and catalog.</p>
+            <h1>{t("Products")}</h1>
+            <p>{t("Manage your menu items and catalog.")}</p>
           </div>
           <button className="btn btn-primary" onClick={handleOpenAddModal}>
-            <Plus size={18} /> Add Product
-          </button>
+            <Plus size={18} /> {t(" Add Product")}</button>
         </div>
 
         {products.length === 0 ? (
           <div className="empty-state glass-card">
             <Package size={64} />
-            <h3>No products found</h3>
-            <p>Start adding items to your menu to receive orders.</p>
+            <h3>{t("No products found")}</h3>
+            <p>{t("Start adding items to your menu to receive orders.")}</p>
             <button className="btn btn-primary" style={{ marginTop: '1rem' }} onClick={handleOpenAddModal}>
-              Add First Product
-            </button>
+              {t("Add First Product")}</button>
           </div>
         ) : (
           <div className="table-container glass-card">
             <table>
               <thead>
                 <tr>
-                  <th>Product</th>
-                  <th>Category</th>
-                  <th>Price</th>
-                  <th>Status</th>
-                  <th>Actions</th>
+                  <th>{t("Product")}</th>
+                  <th>{t("Category")}</th>
+                  <th>{t("Price")}</th>
+                  <th>{t("Status")}</th>
+                  <th>{t("Actions")}</th>
                 </tr>
               </thead>
               <tbody>
                 {products.map((product) => {
                   const productImg = product.image_url || product.imageUrl;
                   const productCatId = product.category_id || product.categoryId;
-                  const categoryName = categories.find((c) => c.id === productCatId)?.name || 'Uncategorized';
+                  const categoryName = categories.find((c) => c.id === productCatId)?.name || t('Uncategorized');
 
                   return (
                     <tr key={product.id}>
@@ -259,14 +259,14 @@ export default function MerchantProductsPage() {
                       </td>
                       <td>
                         <span className="badge" style={{ background: 'var(--bg-tertiary)' }}>
-                          <Tag size={12} style={{ marginRight: 4 }} />
+                          <Tag size={12} style={{ marginInlineEnd: 4 }} />
                           {categoryName}
                         </span>
                       </td>
-                      <td style={{ fontWeight: 600 }}>{product.price} SAR</td>
+                      <td style={{ fontWeight: 600 }}>{product.price} {t(" SAR")}</td>
                       <td>
                         <span className="badge badge-success">
-                          {product.is_active === false || product.isActive === false ? 'Inactive' : 'Active'}
+                          {product.is_active === false || product.isActive === false ? t("Inactive") : t("Active")}
                         </span>
                       </td>
                       <td>
@@ -274,7 +274,7 @@ export default function MerchantProductsPage() {
                           <button
                             type="button"
                             className="btn btn-icon btn-ghost"
-                            title="Edit Product"
+                            title={t("Edit Product")}
                             onClick={() => handleOpenEditModal(product)}
                           >
                             <Edit2 size={16} />
@@ -283,7 +283,7 @@ export default function MerchantProductsPage() {
                             type="button"
                             className="btn btn-icon btn-ghost"
                             style={{ color: 'var(--error)' }}
-                            title="Delete Product"
+                            title={t("Delete Product")}
                             onClick={() => handleOpenDeleteModal(product)}
                           >
                             <Trash2 size={16} />
@@ -306,7 +306,7 @@ export default function MerchantProductsPage() {
           >
             <div className="modal" style={{ maxWidth: 500 }}>
               <div className="modal-header">
-                <h3>{editingProduct ? 'Edit Product' : 'Add New Product'}</h3>
+                <h3>{editingProduct ? t("Edit Product") : t("Add New Product")}</h3>
                 <button
                   type="button"
                   className="btn-icon"
@@ -324,18 +324,18 @@ export default function MerchantProductsPage() {
 
               <form onSubmit={handleSubmitProduct} className="flex flex-col gap-3">
                 <div className="input-group">
-                  <label>Product Name</label>
+                  <label>{t("Product Name")}</label>
                   <input
                     className="input"
                     required
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    placeholder="e.g. Double Burger"
+                    placeholder={t("e.g. Double Burger")}
                   />
                 </div>
 
                 <div className="input-group">
-                  <label>Price (SAR)</label>
+                  <label>{t("Price (SAR)")}</label>
                   <input
                     className="input"
                     type="number"
@@ -344,18 +344,18 @@ export default function MerchantProductsPage() {
                     required
                     value={formData.price}
                     onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                    placeholder="e.g. 25.50"
+                    placeholder={t("e.g. 25.50")}
                   />
                 </div>
 
                 <div className="input-group">
-                  <label>Category</label>
+                  <label>{t("Category")}</label>
                   <select
                     className="input"
                     value={formData.category_id}
                     onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
                   >
-                    <option value="">Uncategorized</option>
+                    <option value="">{t("Uncategorized")}</option>
                     {categories.map((c) => (
                       <option key={c.id} value={c.id}>
                         {c.name}
@@ -365,7 +365,7 @@ export default function MerchantProductsPage() {
                 </div>
 
                 <div className="input-group">
-                  <label>Image URL (Optional)</label>
+                  <label>{t("Image URL (Optional)")}</label>
                   <input
                     className="input"
                     type="url"
@@ -376,13 +376,13 @@ export default function MerchantProductsPage() {
                 </div>
 
                 <div className="input-group">
-                  <label>Description</label>
+                  <label>{t("Description")}</label>
                   <textarea
                     className="input"
                     rows={3}
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    placeholder="Brief description of the item"
+                    placeholder={t("Brief description of the item")}
                   />
                 </div>
 
@@ -393,16 +393,15 @@ export default function MerchantProductsPage() {
                     onClick={() => setIsModalOpen(false)}
                     disabled={formLoading}
                   >
-                    Cancel
-                  </button>
+                    {t("Cancel")}</button>
                   <button type="submit" className="btn btn-primary" disabled={formLoading}>
                     {formLoading
                       ? editingProduct
-                        ? 'Updating...'
-                        : 'Saving...'
+                        ? t("Updating...")
+                        : t("Saving...")
                       : editingProduct
-                      ? 'Update Product'
-                      : 'Save Product'}
+                      ? t("Update Product")
+                      : t("Save Product")}
                   </button>
                 </div>
               </form>
@@ -420,7 +419,7 @@ export default function MerchantProductsPage() {
               <div className="modal-header">
                 <div className="flex items-center gap-2" style={{ color: 'var(--error)' }}>
                   <AlertTriangle size={22} />
-                  <h3 style={{ margin: 0, color: 'var(--text-primary)' }}>Delete Product</h3>
+                  <h3 style={{ margin: 0, color: 'var(--text-primary)' }}>{t("Delete Product")}</h3>
                 </div>
                 <button
                   type="button"
@@ -439,9 +438,7 @@ export default function MerchantProductsPage() {
 
               <div style={{ margin: '1rem 0' }}>
                 <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', margin: 0 }}>
-                  Are you sure you want to delete <strong style={{ color: 'var(--text-primary)' }}>"{productToDelete.name}"</strong>?
-                  This item will be removed from your store menu.
-                </p>
+                  {t("Are you sure you want to delete ")}<strong style={{ color: 'var(--text-primary)' }}>"{productToDelete.name}"</strong>{t("? This item will be removed from your store menu.")}</p>
               </div>
 
               <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
@@ -451,8 +448,7 @@ export default function MerchantProductsPage() {
                   onClick={() => setIsDeleteModalOpen(false)}
                   disabled={deleteLoading}
                 >
-                  Cancel
-                </button>
+                  {t("Cancel")}</button>
                 <button
                   type="button"
                   className="btn btn-sm"
@@ -460,7 +456,7 @@ export default function MerchantProductsPage() {
                   onClick={handleConfirmDelete}
                   disabled={deleteLoading}
                 >
-                  {deleteLoading ? 'Deleting...' : 'Delete Product'}
+                  {deleteLoading ? t("Deleting...") : t("Delete Product")}
                 </button>
               </div>
             </div>

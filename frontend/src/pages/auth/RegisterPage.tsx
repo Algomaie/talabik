@@ -1,8 +1,10 @@
+import { useI18n } from '../../i18n/I18nContext';
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { Package, Eye, EyeOff, ArrowRight, User, Briefcase, Truck } from 'lucide-react';
 import './Auth.css';
+import LanguageSwitcher from '../../components/LanguageSwitcher';
 
 const ROLES = [
   { value: 'CUSTOMER', label: 'Customer', icon: User, desc: 'Order from stores' },
@@ -11,6 +13,7 @@ const ROLES = [
 ];
 
 export default function RegisterPage() {
+  const { t } = useI18n();
   const { register } = useAuth();
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
@@ -51,6 +54,7 @@ export default function RegisterPage() {
 
   return (
     <div className="auth-page">
+      <div className="auth-language"><LanguageSwitcher /></div>
       <div className="auth-bg-orbs">
         <div className="orb orb-1" />
         <div className="orb orb-2" />
@@ -62,8 +66,8 @@ export default function RegisterPage() {
           <div className="auth-logo">
             <Package size={32} />
           </div>
-          <h1>Talbak</h1>
-          <p>Create your account</p>
+          <h1>{t("Talbak")}</h1>
+          <p>{t("Create your account")}</p>
         </div>
 
         <form onSubmit={handleSubmit} className="auth-form">
@@ -71,21 +75,21 @@ export default function RegisterPage() {
           <div className="register-steps">
             <div className={`register-step ${step >= 1 ? 'active' : ''}`}>
               <span>1</span>
-              <small>Role</small>
+              <small>{t("Role")}</small>
             </div>
             <div className="register-step-line" />
             <div className={`register-step ${step >= 2 ? 'active' : ''}`}>
               <span>2</span>
-              <small>Details</small>
+              <small>{t("Details")}</small>
             </div>
           </div>
 
-          {error && <div className="auth-error animate-fade-in">{error}</div>}
+          {error && <div className="auth-error animate-fade-in">{t(error)}</div>}
 
           {step === 1 && (
             <>
-              <h2>Choose Your Role</h2>
-              <p className="auth-subtitle">How will you use Talbak?</p>
+              <h2>{t("Choose Your Role")}</h2>
+              <p className="auth-subtitle">{t("How will you use Talbak?")}</p>
 
               <div className="role-selector">
                 {ROLES.map((r) => {
@@ -101,8 +105,8 @@ export default function RegisterPage() {
                         <Icon size={24} />
                       </div>
                       <div>
-                        <div className="role-label">{r.label}</div>
-                        <div className="role-desc">{r.desc}</div>
+                        <div className="role-label">{t(r.label)}</div>
+                        <div className="role-desc">{t(r.desc)}</div>
                       </div>
                     </button>
                   );
@@ -114,24 +118,24 @@ export default function RegisterPage() {
                 className="btn btn-primary btn-block btn-lg"
                 onClick={() => setStep(2)}
               >
-                Continue <ArrowRight size={18} />
+                {t("Continue ")}<ArrowRight size={18} />
               </button>
             </>
           )}
 
           {step === 2 && (
             <>
-              <h2>Your Information</h2>
-              <p className="auth-subtitle">Fill in your details to get started</p>
+              <h2>{t("Your Information")}</h2>
+              <p className="auth-subtitle">{t("Fill in your details to get started")}</p>
 
               <div className="register-row">
                 <div className="input-group">
-                  <label htmlFor="firstName">First Name</label>
+                  <label htmlFor="firstName">{t("First Name")}</label>
                   <input
                     id="firstName"
                     type="text"
                     className="input"
-                    placeholder="Ahmed"
+                    placeholder={t("Ahmed")}
                     value={firstName}
                     onChange={(e) => setFirstName(e.target.value)}
                     required
@@ -139,12 +143,12 @@ export default function RegisterPage() {
                   />
                 </div>
                 <div className="input-group">
-                  <label htmlFor="lastName">Last Name</label>
+                  <label htmlFor="lastName">{t("Last Name")}</label>
                   <input
                     id="lastName"
                     type="text"
                     className="input"
-                    placeholder="Ali"
+                    placeholder={t("Ali")}
                     value={lastName}
                     onChange={(e) => setLastName(e.target.value)}
                     required
@@ -153,7 +157,7 @@ export default function RegisterPage() {
               </div>
 
               <div className="input-group">
-                <label htmlFor="regEmail">Email</label>
+                <label htmlFor="regEmail">{t("Email")}</label>
                 <input
                   id="regEmail"
                   type="email"
@@ -166,43 +170,43 @@ export default function RegisterPage() {
               </div>
 
               <div className="input-group">
-                <label htmlFor="phone">Phone</label>
+                <label htmlFor="phone">{t("Phone")}</label>
                 <input
                   id="phone"
                   type="tel"
                   className="input"
-                  placeholder="+966 5XX XXX XXXX"
+                  placeholder={t("+966 5XX XXX XXXX")}
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                 />
               </div>
 
               <div className="input-group">
-                <label htmlFor="regPassword">Password</label>
+                <label htmlFor="regPassword">{t("Password")}</label>
                 <div className="password-wrapper">
                   <input
                     id="regPassword"
                     type={showPw ? 'text' : 'password'}
                     className="input"
-                    placeholder="Min 8 characters"
+                    placeholder={t("Min 8 characters")}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
                     minLength={8}
                   />
-                  <button type="button" className="pw-toggle" onClick={() => setShowPw(!showPw)}>
+                  <button type="button" aria-label={showPw ? t('Hide password') : t('Show password')} className="pw-toggle" onClick={() => setShowPw(!showPw)}>
                     {showPw ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
                 </div>
               </div>
 
               <div className="input-group">
-                <label htmlFor="confirmPw">Confirm Password</label>
+                <label htmlFor="confirmPw">{t("Confirm Password")}</label>
                 <input
                   id="confirmPw"
                   type="password"
                   className="input"
-                  placeholder="Re-enter password"
+                  placeholder={t("Re-enter password")}
                   value={confirmPw}
                   onChange={(e) => setConfirmPw(e.target.value)}
                   required
@@ -215,13 +219,12 @@ export default function RegisterPage() {
                   className="btn btn-ghost"
                   onClick={() => setStep(1)}
                 >
-                  Back
-                </button>
+                  {t("Back")}</button>
                 <button type="submit" className="btn btn-primary btn-lg" style={{ flex: 1 }} disabled={loading}>
                   {loading ? (
                     <div className="spinner" style={{ width: 20, height: 20, borderWidth: 2 }} />
                   ) : (
-                    <>Create Account <ArrowRight size={18} /></>
+                    <>{t("Create Account ")}<ArrowRight size={18} /></>
                   )}
                 </button>
               </div>
@@ -229,10 +232,9 @@ export default function RegisterPage() {
           )}
 
           <p className="auth-subtitle">
-            Merchant and driver accounts require administrator approval before managing stores or deliveries.
-          </p>
+            {t("Merchant and driver accounts require administrator approval before managing stores or deliveries.")}</p>
           <p className="auth-footer">
-            Already have an account? <Link to="/login">Sign in</Link>
+            {t("Already have an account? ")}<Link to="/login">{t("Sign in")}</Link>
           </p>
         </form>
       </div>

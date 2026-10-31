@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n/I18nContext';
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { storesApi, categoriesApi, productsApi, cartApi, ratingsApi } from '../../lib/api';
@@ -22,6 +23,7 @@ interface Review {
 }
 
 export default function StoreDetailsPage() {
+  const { t, locale } = useI18n();
   const { id } = useParams();
   const navigate = useNavigate();
   const [store, setStore] = useState<any>(null);
@@ -140,7 +142,7 @@ export default function StoreDetailsPage() {
         <div className="container">
           <div className="loading-screen" style={{ minHeight: '40vh' }}>
             <div className="spinner" />
-            <p style={{ color: 'var(--text-secondary)' }}>Loading store details...</p>
+            <p style={{ color: 'var(--text-secondary)' }}>{t("Loading store details...")}</p>
           </div>
         </div>
       </div>
@@ -152,10 +154,9 @@ export default function StoreDetailsPage() {
       <div className="page container animate-fade-in">
         <div className="empty-state glass-card">
           <Store size={64} />
-          <h3>Store not found</h3>
+          <h3>{t("Store not found")}</h3>
           <button className="btn btn-primary" onClick={() => navigate('/stores')} style={{ marginTop: '1rem' }}>
-            Go Back to Stores
-          </button>
+            {t("Go Back to Stores")}</button>
         </div>
       </div>
     );
@@ -175,7 +176,7 @@ export default function StoreDetailsPage() {
         {toastMessage && (
           <div className="toast toast-success">
             <Check size={20} />
-            <span>{toastMessage}</span>
+            <span>{t(toastMessage)}</span>
           </div>
         )}
 
@@ -184,8 +185,7 @@ export default function StoreDetailsPage() {
           onClick={() => navigate('/stores')}
           style={{ marginBottom: '1.5rem', padding: '0.5rem 1rem' }}
         >
-          <ArrowLeft size={16} /> Back to Stores
-        </button>
+          <ArrowLeft size={16} /> {t(" Back to Stores")}</button>
 
         {/* Store Header Info */}
         <div className="glass-card store-hero">
@@ -213,16 +213,15 @@ export default function StoreDetailsPage() {
               <div className="store-meta">
                 <span className="badge badge-warning">
                   <Star size={14} style={{ fill: 'currentColor' }} />
-                  {avgScore ? `${avgScore} / 5` : 'New'}
+                  {avgScore ? t("{v0} / 5", { v0: avgScore }) : t("New")}
                 </span>
                 <span className="meta-item">
-                  <MapPin size={16} /> {store.address || 'Location unavailable'}
+                  <MapPin size={16} /> {store.address || t("Location unavailable")}
                 </span>
                 <span className="meta-item">
-                  <Clock size={16} /> 20-30 min delivery
-                </span>
+                  <Clock size={16} /> {t(" 20-30 min delivery")}</span>
               </div>
-              <p className="store-desc">{store.description || 'Delicious meals delivered fresh to your door.'}</p>
+              <p className="store-desc">{store.description || t("Delicious meals delivered fresh to your door.")}</p>
             </div>
           </div>
         </div>
@@ -233,7 +232,7 @@ export default function StoreDetailsPage() {
             className={`cat-tab ${!activeCategory ? 'active' : ''}`}
             onClick={() => setActiveCategory(null)}
           >
-            All Items ({products.length})
+            {t("All Items (")}{products.length})
           </button>
           {categories.map((cat) => (
             <button
@@ -268,7 +267,7 @@ export default function StoreDetailsPage() {
                 <div className="product-info">
                   <div className="flex items-center justify-between" style={{ marginBottom: '0.25rem' }}>
                     <h3 className="product-name">{product.name}</h3>
-                    <span className="product-price">{product.price} SAR</span>
+                    <span className="product-price">{product.price} {t(" SAR")}</span>
                   </div>
                   <p
                     style={{
@@ -282,14 +281,13 @@ export default function StoreDetailsPage() {
                       minHeight: '2.4em',
                     }}
                   >
-                    {product.description || 'Freshly made with quality ingredients.'}
+                    {product.description || t("Freshly made with quality ingredients.")}
                   </p>
                   <button
                     className="btn btn-primary btn-block btn-sm"
                     onClick={() => openQuantityModal(product)}
                   >
-                    <Plus size={16} /> Add to Cart
-                  </button>
+                    <Plus size={16} /> {t(" Add to Cart")}</button>
                 </div>
               </div>
             );
@@ -299,8 +297,8 @@ export default function StoreDetailsPage() {
         {filteredProducts.length === 0 && (
           <div className="empty-state glass-card" style={{ marginTop: '2rem' }}>
             <ShoppingBag size={48} />
-            <h3>No products found</h3>
-            <p>This category doesn't have any products available yet.</p>
+            <h3>{t("No products found")}</h3>
+            <p>{t("This category doesn't have any products available yet.")}</p>
           </div>
         )}
 
@@ -310,10 +308,9 @@ export default function StoreDetailsPage() {
             <div>
               <h2 style={{ fontSize: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <MessageSquare size={22} style={{ color: 'var(--accent)' }} />
-                Customer Reviews
-              </h2>
+                {t("Customer Reviews")}</h2>
               <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginTop: 2 }}>
-                What verified customers are saying about {store.name}
+                {t("What verified customers are saying about ")}{store.name}
               </p>
             </div>
 
@@ -344,7 +341,7 @@ export default function StoreDetailsPage() {
                     ))}
                   </div>
                   <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                    {reviews.length} {reviews.length === 1 ? 'review' : 'reviews'}
+                    {reviews.length} {reviews.length === 1 ? t("review") : t("reviews")}
                   </div>
                 </div>
               </div>
@@ -354,10 +351,9 @@ export default function StoreDetailsPage() {
           {reviews.length === 0 ? (
             <div className="empty-state glass-card" style={{ padding: '3rem 1.5rem' }}>
               <Star size={44} style={{ opacity: 0.3, color: 'var(--warning)' }} />
-              <h3 style={{ fontSize: '1.15rem' }}>No reviews yet</h3>
+              <h3 style={{ fontSize: '1.15rem' }}>{t("No reviews yet")}</h3>
               <p style={{ fontSize: '0.875rem', maxWidth: 400 }}>
-                This store doesn't have any reviews yet. Place an order to be the first to leave feedback!
-              </p>
+                {t("This store doesn't have any reviews yet. Place an order to be the first to leave feedback!")}</p>
             </div>
           ) : (
             <div className="grid grid-3" style={{ gap: '1.25rem' }}>
@@ -407,7 +403,7 @@ export default function StoreDetailsPage() {
                           fontStyle: review.comment ? 'normal' : 'italic',
                         }}
                       >
-                        {review.comment || 'Rating only, no written comment.'}
+                        {review.comment || t("Rating only, no written comment.")}
                       </p>
                     </div>
 
@@ -421,7 +417,7 @@ export default function StoreDetailsPage() {
                           paddingTop: '0.5rem',
                         }}
                       >
-                        {new Date(dateStr).toLocaleDateString()}
+                        {new Date(dateStr).toLocaleDateString(locale)}
                       </div>
                     )}
                   </div>
@@ -441,7 +437,7 @@ export default function StoreDetailsPage() {
             style={{ maxWidth: 420 }}
           >
             <div className="modal-header">
-              <h3>Add to Cart</h3>
+              <h3>{t("Add to Cart")}</h3>
               <button
                 className="btn btn-ghost btn-sm"
                 onClick={closeQuantityModal}
@@ -492,8 +488,7 @@ export default function StoreDetailsPage() {
               <div style={{ flex: 1 }}>
                 <h4 style={{ fontSize: '1rem', marginBottom: 2 }}>{selectedProduct.name}</h4>
                 <div style={{ color: 'var(--accent)', fontWeight: 600, fontSize: '0.9rem' }}>
-                  {selectedProduct.price} SAR
-                </div>
+                  {selectedProduct.price} {t(" SAR")}</div>
               </div>
             </div>
 
@@ -510,8 +505,7 @@ export default function StoreDetailsPage() {
                   letterSpacing: '0.05em',
                 }}
               >
-                Select Quantity (1 - 10)
-              </label>
+                {t("Select Quantity (1 - 10)")}</label>
 
               <div
                 style={{
@@ -530,7 +524,7 @@ export default function StoreDetailsPage() {
                   onClick={() => setQuantity((q) => Math.max(1, q - 1))}
                   disabled={quantity <= 1}
                   style={{ width: 34, height: 34 }}
-                  title="Decrease"
+                  title={t("Decrease")}
                 >
                   <Minus size={16} />
                 </button>
@@ -553,7 +547,7 @@ export default function StoreDetailsPage() {
                   onClick={() => setQuantity((q) => Math.min(10, q + 1))}
                   disabled={quantity >= 10}
                   style={{ width: 34, height: 34 }}
-                  title="Increase"
+                  title={t("Increase")}
                 >
                   <Plus size={16} />
                 </button>
@@ -561,10 +555,9 @@ export default function StoreDetailsPage() {
 
               {/* Total preview */}
               <div style={{ marginTop: '1rem', fontSize: '0.95rem', color: 'var(--text-secondary)' }}>
-                Total:{' '}
+                {t("Total:")}{' '}
                 <strong style={{ color: 'var(--text-primary)', fontSize: '1.1rem' }}>
-                  {(parseFloat(selectedProduct.price || 0) * quantity).toFixed(2)} SAR
-                </strong>
+                  {(parseFloat(selectedProduct.price || 0) * quantity).toFixed(2)} {t(" SAR")}</strong>
               </div>
             </div>
 
@@ -579,7 +572,7 @@ export default function StoreDetailsPage() {
                   marginBottom: '1.25rem',
                 }}
               >
-                {addToCartError}
+                {t(addToCartError)}
               </div>
             )}
 
@@ -590,8 +583,7 @@ export default function StoreDetailsPage() {
                 onClick={closeQuantityModal}
                 disabled={addingToCart}
               >
-                Cancel
-              </button>
+                {t("Cancel")}</button>
               <button
                 type="button"
                 className="btn btn-primary btn-block"
@@ -601,7 +593,7 @@ export default function StoreDetailsPage() {
                 {addingToCart ? (
                   <div className="spinner" style={{ width: 18, height: 18, borderWidth: 2 }} />
                 ) : (
-                  <>Add {quantity} to Cart</>
+                  <>{t("Add ")}{quantity} {t(" to Cart")}</>
                 )}
               </button>
             </div>

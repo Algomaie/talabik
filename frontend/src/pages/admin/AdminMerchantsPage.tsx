@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n/I18nContext';
 import { useEffect, useState } from 'react';
 import { adminApi } from '../../lib/api';
 import {
@@ -7,6 +8,7 @@ import {
 import '../shared/Shared.css';
 
 export default function AdminMerchantsPage() {
+  const { t, locale } = useI18n();
   const [merchants, setMerchants] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -69,19 +71,19 @@ export default function AdminMerchantsPage() {
     <div className="page animate-fade-in">
       <div className="container">
         <div className="page-header">
-          <h1><Briefcase size={28} style={{ verticalAlign: 'middle', marginRight: 8 }} /> Merchant Management</h1>
-          <p>Manage merchant accounts and their store statuses.</p>
+          <h1><Briefcase size={28} style={{ verticalAlign: 'middle', marginInlineEnd: 8 }} /> {t(" Merchant Management")}</h1>
+          <p>{t("Manage merchant accounts and their store statuses.")}</p>
         </div>
 
         <div className="admin-toolbar">
           <div className="admin-search">
             <Search size={18} />
-            <input className="input" placeholder="Search merchants..." value={search} onChange={(e) => setSearch(e.target.value)} />
+            <input className="input" placeholder={t("Search merchants...")} value={search} onChange={(e) => setSearch(e.target.value)} />
           </div>
           <div className="admin-filters">
             {['ALL', 'PENDING', 'APPROVED', 'SUSPENDED'].map((s) => (
               <button key={s} className={`filter-chip ${statusFilter === s ? 'active' : ''}`} onClick={() => { setStatusFilter(s); setPage(1); }}>
-                {s === 'ALL' ? 'All Status' : s}
+                {s === 'ALL' ? t("All Status") : t(s)}
               </button>
             ))}
           </div>
@@ -92,11 +94,11 @@ export default function AdminMerchantsPage() {
             <table>
               <thead>
                 <tr>
-                  <th>Merchant</th>
-                  <th>Store</th>
-                  <th>Status</th>
-                  <th>Joined</th>
-                  <th>Actions</th>
+                  <th>{t("Merchant")}</th>
+                  <th>{t("Store")}</th>
+                  <th>{t("Status")}</th>
+                  <th>{t("Joined")}</th>
+                  <th>{t("Actions")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -108,7 +110,7 @@ export default function AdminMerchantsPage() {
                           {getInitials(merchant.business_name || merchant.first_name || '')}
                         </div>
                         <div>
-                          <div className="user-row-name">{merchant.business_name || `${merchant.first_name} ${merchant.last_name}`}</div>
+                          <div className="user-row-name">{merchant.business_name || t("{v0} {v1}", { v0: merchant.first_name, v1: merchant.last_name })}</div>
                           <div className="user-row-email">{merchant.email}</div>
                         </div>
                       </div>
@@ -120,24 +122,24 @@ export default function AdminMerchantsPage() {
                           <span style={{ fontSize: '0.85rem' }}>{merchant.store_name}</span>
                         </div>
                       ) : (
-                        <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>No store</span>
+                        <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>{t("No store")}</span>
                       )}
                     </td>
                     <td>
                       <span className={`badge ${statusBadge(merchant.status)}`}>
                         <span className={`status-dot ${merchant.status === 'APPROVED' ? 'active' : merchant.status === 'SUSPENDED' ? 'inactive' : 'pending'}`} />
-                        {merchant.status}
+                        {t(merchant.status)}
                       </span>
                     </td>
                     <td style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>
-                      {new Date(merchant.created_at).toLocaleDateString()}
+                      {new Date(merchant.created_at).toLocaleDateString(locale)}
                     </td>
                     <td>
                       <div className="action-btns">
-                        <button className="action-btn" title="View" onClick={() => setSelectedMerchant(merchant)}><Eye size={16} /></button>
+                        <button className="action-btn" title={t("View")} onClick={() => setSelectedMerchant(merchant)}><Eye size={16} /></button>
                         <button
                           className={`action-btn ${merchant.status === 'APPROVED' ? 'danger' : 'success'}`}
-                          title={merchant.status === 'APPROVED' ? 'Suspend' : 'Approve'}
+                          title={merchant.status === 'APPROVED' ? t("Suspend") : t("Approve")}
                           onClick={() => toggleStatus(merchant)}
                         >
                           {merchant.status === 'APPROVED' ? <ShieldOff size={16} /> : <Shield size={16} />}
@@ -149,7 +151,7 @@ export default function AdminMerchantsPage() {
                 {filteredMerchants.length === 0 && (
                   <tr><td colSpan={5}>
                     <div className="empty-state" style={{ padding: '2rem' }}>
-                      <Briefcase size={40} /><h3>No merchants found</h3>
+                      <Briefcase size={40} /><h3>{t("No merchants found")}</h3>
                     </div>
                   </td></tr>
                 )}
@@ -173,16 +175,16 @@ export default function AdminMerchantsPage() {
         <div className="modal-overlay" onClick={() => setSelectedMerchant(null)}>
           <div className="modal animate-scale-in" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>Merchant Details</h3>
+              <h3>{t("Merchant Details")}</h3>
               <button className="action-btn" onClick={() => setSelectedMerchant(null)}><X size={18} /></button>
             </div>
             <div className="detail-grid">
-              <div className="detail-item"><label>Business</label><span>{selectedMerchant.business_name || 'N/A'}</span></div>
-              <div className="detail-item"><label>Email</label><span>{selectedMerchant.email}</span></div>
-              <div className="detail-item"><label>Phone</label><span>{selectedMerchant.phone || 'N/A'}</span></div>
-              <div className="detail-item"><label>Status</label><span className={`badge ${statusBadge(selectedMerchant.status)}`}>{selectedMerchant.status}</span></div>
-              <div className="detail-item"><label>Store</label><span>{selectedMerchant.store_name || 'No store'}</span></div>
-              <div className="detail-item"><label>Joined</label><span>{new Date(selectedMerchant.created_at).toLocaleDateString()}</span></div>
+              <div className="detail-item"><label>{t("Business")}</label><span>{selectedMerchant.business_name || t("N/A")}</span></div>
+              <div className="detail-item"><label>{t("Email")}</label><span>{selectedMerchant.email}</span></div>
+              <div className="detail-item"><label>{t("Phone")}</label><span>{selectedMerchant.phone || t("N/A")}</span></div>
+              <div className="detail-item"><label>{t("Status")}</label><span className={`badge ${statusBadge(selectedMerchant.status)}`}>{t(selectedMerchant.status)}</span></div>
+              <div className="detail-item"><label>{t("Store")}</label><span>{selectedMerchant.store_name || t("No store")}</span></div>
+              <div className="detail-item"><label>{t("Joined")}</label><span>{new Date(selectedMerchant.created_at).toLocaleDateString(locale)}</span></div>
             </div>
             <div style={{ marginTop: '1.5rem' }}>
               <button
@@ -192,7 +194,7 @@ export default function AdminMerchantsPage() {
                   setSelectedMerchant({ ...selectedMerchant, status: selectedMerchant.status === 'APPROVED' ? 'SUSPENDED' : 'APPROVED' });
                 }}
               >
-                {selectedMerchant.status === 'APPROVED' ? <><ShieldOff size={16} /> Suspend Merchant</> : <><Shield size={16} /> Approve Merchant</>}
+                {selectedMerchant.status === 'APPROVED' ? <><ShieldOff size={16} /> {t(" Suspend Merchant")}</> : <><Shield size={16} /> {t(" Approve Merchant")}</>}
               </button>
             </div>
           </div>

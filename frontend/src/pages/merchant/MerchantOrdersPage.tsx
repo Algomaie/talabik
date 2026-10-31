@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n/I18nContext';
 import { useEffect, useState } from 'react';
 import { ordersApi, storesApi } from '../../lib/api';
 import { ShoppingBag, CheckCircle, ChefHat, Check, X, AlertTriangle } from 'lucide-react';
@@ -12,6 +13,7 @@ const STATUS_FILTERS = [
 ] as const;
 
 export default function MerchantOrdersPage() {
+  const { t, locale } = useI18n();
   const [orders, setOrders] = useState<any[]>([]);
   const [store, setStore] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -59,7 +61,7 @@ export default function MerchantOrdersPage() {
 
       await loadData();
     } catch (err: any) {
-      alert(err.response?.data?.error?.message || 'Failed to update order');
+      alert(t(err.response?.data?.error?.message || 'Failed to update order'));
     } finally {
       setActionLoading(null);
     }
@@ -81,7 +83,7 @@ export default function MerchantOrdersPage() {
       : rejectionReason;
 
     if (!finalReason) {
-      alert('Please provide a rejection reason');
+      alert(t('Please provide a rejection reason'));
       return;
     }
 
@@ -92,7 +94,7 @@ export default function MerchantOrdersPage() {
       setOrderToReject(null);
       await loadData();
     } catch (err: any) {
-      alert(err.response?.data?.error?.message || 'Failed to reject order');
+      alert(t(err.response?.data?.error?.message || 'Failed to reject order'));
     } finally {
       setRejecting(false);
     }
@@ -153,8 +155,8 @@ export default function MerchantOrdersPage() {
     return (
       <div className="page container animate-fade-in">
         <div className="empty-state glass-card">
-          <h3>No Store Found</h3>
-          <p>You need to create a store first to receive orders.</p>
+          <h3>{t("No Store Found")}</h3>
+          <p>{t("You need to create a store first to receive orders.")}</p>
         </div>
       </div>
     );
@@ -164,8 +166,8 @@ export default function MerchantOrdersPage() {
     <div className="page animate-fade-in">
       <div className="container">
         <div className="page-header">
-          <h1>Store Orders</h1>
-          <p>Manage incoming orders for {store.name}.</p>
+          <h1>{t("Store Orders")}</h1>
+          <p>{t("Manage incoming orders for ")}{store.name}.</p>
         </div>
 
         {/* Status Filter Tabs */}
@@ -205,7 +207,7 @@ export default function MerchantOrdersPage() {
                   whiteSpace: 'nowrap',
                 }}
               >
-                <span>{tab.label}</span>
+                <span>{t(tab.label)}</span>
                 <span
                   style={{
                     padding: '2px 8px',
@@ -225,11 +227,11 @@ export default function MerchantOrdersPage() {
         {filteredOrders.length === 0 ? (
           <div className="empty-state glass-card">
             <ShoppingBag size={64} />
-            <h3>No orders found</h3>
+            <h3>{t("No orders found")}</h3>
             <p>
               {statusFilter === 'ALL'
-                ? 'New orders will appear here automatically.'
-                : `No orders currently matching "${STATUS_FILTERS.find((f) => f.key === statusFilter)?.label}".`}
+                ? t("New orders will appear here automatically.")
+                : t("No orders currently matching \"{v0}\".", { v0: t(STATUS_FILTERS.find((f) => f.key === statusFilter)?.label) })}
             </p>
           </div>
         ) : (
@@ -240,7 +242,7 @@ export default function MerchantOrdersPage() {
                 className="glass-card"
                 style={{
                   padding: '1.5rem',
-                  borderLeft: `4px solid ${getStatusColor(order.status)}`,
+                  borderInlineStart: `4px solid ${getStatusColor(order.status)}`,
                 }}
               >
                 <div
@@ -253,10 +255,10 @@ export default function MerchantOrdersPage() {
                 >
                   <div>
                     <h3 style={{ fontSize: '1.1rem', marginBottom: '0.25rem' }}>
-                      Order #{order.order_number}
+                      {t("Order #")}{order.order_number}
                     </h3>
                     <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>
-                      {new Date(order.created_at).toLocaleString()}
+                      {new Date(order.created_at).toLocaleString(locale)}
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
@@ -267,11 +269,10 @@ export default function MerchantOrdersPage() {
                         color: getStatusColor(order.status),
                       }}
                     >
-                      {formatStatusLabel(order.status)}
+                      {t(formatStatusLabel(order.status))}
                     </span>
                     <span style={{ fontWeight: 700, fontSize: '1.25rem' }}>
-                      {order.total} SAR
-                    </span>
+                      {order.total} {t(" SAR")}</span>
                   </div>
                 </div>
 
@@ -284,8 +285,7 @@ export default function MerchantOrdersPage() {
                       textTransform: 'uppercase',
                     }}
                   >
-                    Items
-                  </h4>
+                    {t("Items")}</h4>
                   {order.items?.map((item: any) => (
                     <div
                       key={item.id}
@@ -293,12 +293,11 @@ export default function MerchantOrdersPage() {
                       style={{ padding: '0.25rem 0', fontSize: '0.9rem' }}
                     >
                       <span>
-                        <span style={{ fontWeight: 600 }}>{item.quantity}x</span>{' '}
+                        <span style={{ fontWeight: 600 }}>{item.quantity}{t("x")}</span>{' '}
                         {item.product?.name || item.product_name}
                       </span>
                       <span style={{ color: 'var(--text-muted)' }}>
-                        {item.unit_price || item.product_price} SAR
-                      </span>
+                        {item.unit_price || item.product_price} {t(" SAR")}</span>
                     </div>
                   ))}
                 </div>
@@ -320,15 +319,13 @@ export default function MerchantOrdersPage() {
                         onClick={() => openRejectModal(order)}
                         disabled={actionLoading !== null}
                       >
-                        <X size={16} /> Reject
-                      </button>
+                        <X size={16} /> {t(" Reject")}</button>
                       <button
                         className="btn btn-primary btn-sm"
                         onClick={() => updateStatus(order.id, 'confirm', 'CONFIRMED')}
                         disabled={actionLoading !== null}
                       >
-                        <Check size={16} /> Accept Order
-                      </button>
+                        <Check size={16} /> {t(" Accept Order")}</button>
                     </>
                   )}
 
@@ -338,8 +335,7 @@ export default function MerchantOrdersPage() {
                       onClick={() => updateStatus(order.id, 'status', 'PREPARING')}
                       disabled={actionLoading !== null}
                     >
-                      <ChefHat size={16} /> Start Preparing
-                    </button>
+                      <ChefHat size={16} /> {t(" Start Preparing")}</button>
                   )}
 
                   {order.status === 'PREPARING' && (
@@ -349,16 +345,14 @@ export default function MerchantOrdersPage() {
                       onClick={() => updateStatus(order.id, 'status', 'READY_FOR_PICKUP')}
                       disabled={actionLoading !== null}
                     >
-                      <CheckCircle size={16} /> Mark as Ready
-                    </button>
+                      <CheckCircle size={16} /> {t(" Mark as Ready")}</button>
                   )}
 
                   {['READY', 'READY_FOR_PICKUP', 'PICKED_UP', 'IN_TRANSIT', 'DELIVERED', 'CANCELLED'].includes(
                     order.status
                   ) && (
                     <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                      No store actions available
-                    </span>
+                      {t("No store actions available")}</span>
                   )}
                 </div>
               </div>
@@ -377,7 +371,7 @@ export default function MerchantOrdersPage() {
                 <div className="flex items-center gap-2" style={{ color: 'var(--error)' }}>
                   <AlertTriangle size={22} />
                   <h3 style={{ margin: 0, color: 'var(--text-primary)' }}>
-                    Reject Order #{orderToReject.order_number}
+                    {t("Reject Order #")}{orderToReject.order_number}
                   </h3>
                 </div>
                 <button
@@ -397,34 +391,33 @@ export default function MerchantOrdersPage() {
 
               <form onSubmit={handleConfirmReject} className="flex flex-col gap-4">
                 <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', margin: 0 }}>
-                  Please select or enter the reason for rejecting this order. The customer will be notified.
-                </p>
+                  {t("Please select or enter the reason for rejecting this order. The customer will be notified.")}</p>
 
                 <div className="input-group">
-                  <label>Select Reason</label>
+                  <label>{t("Select Reason")}</label>
                   <select
                     className="input"
                     value={rejectionReason}
                     onChange={(e) => setRejectionReason(e.target.value)}
                   >
-                    <option value="Store too busy">Store too busy</option>
-                    <option value="Item out of stock">Item out of stock</option>
-                    <option value="Store closing soon">Store closing soon</option>
-                    <option value="Cannot fulfill special instructions">Cannot fulfill special instructions</option>
-                    <option value="Other">Other (Custom Reason)</option>
+                    <option value="Store too busy">{t("Store too busy")}</option>
+                    <option value="Item out of stock">{t("Item out of stock")}</option>
+                    <option value="Store closing soon">{t("Store closing soon")}</option>
+                    <option value="Cannot fulfill special instructions">{t("Cannot fulfill special instructions")}</option>
+                    <option value="Other">{t("Other (Custom Reason)")}</option>
                   </select>
                 </div>
 
                 {rejectionReason === 'Other' && (
                   <div className="input-group">
-                    <label>Custom Rejection Reason</label>
+                    <label>{t("Custom Rejection Reason")}</label>
                     <textarea
                       className="input"
                       rows={3}
                       required
                       value={customReason}
                       onChange={(e) => setCustomReason(e.target.value)}
-                      placeholder="Specify the reason for rejecting this order..."
+                      placeholder={t("Specify the reason for rejecting this order...")}
                     />
                   </div>
                 )}
@@ -443,15 +436,14 @@ export default function MerchantOrdersPage() {
                     onClick={() => setIsRejectModalOpen(false)}
                     disabled={rejecting}
                   >
-                    Cancel
-                  </button>
+                    {t("Cancel")}</button>
                   <button
                     type="submit"
                     className="btn btn-sm"
                     style={{ background: 'var(--error)', color: '#fff' }}
                     disabled={rejecting}
                   >
-                    {rejecting ? 'Rejecting...' : 'Confirm Rejection'}
+                    {rejecting ? t("Rejecting...") : t("Confirm Rejection")}
                   </button>
                 </div>
               </form>

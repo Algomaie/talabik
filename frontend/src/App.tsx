@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import { I18nProvider } from './i18n/I18nProvider';
 import AppLayout from './components/AppLayout';
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
@@ -23,7 +24,7 @@ import NotificationsPage from './pages/shared/NotificationsPage';
 
 function App() {
   return (
-    <BrowserRouter>
+    <I18nProvider><BrowserRouter>
       <AuthProvider>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
@@ -61,7 +62,7 @@ function App() {
           </Route>
         </Routes>
       </AuthProvider>
-    </BrowserRouter>
+    </BrowserRouter></I18nProvider>
   );
 }
 

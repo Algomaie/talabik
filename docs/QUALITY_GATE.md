@@ -1,5 +1,22 @@
 # Executed quality gate
 
+## Arabic/English follow-up — 31 October 2026
+
+These results cover the subsequent [localization changes](LOCALIZATION.md); older test totals below describe earlier revisions.
+
+| Command / check | Result | Evidence / limit |
+| --- | --- | --- |
+| `npm test --prefix frontend` | PASS | **12 tests / 5 files**, including 6 bilingual tests: input preservation and persistence, login failure, REST retry/interpolation, raw role filters, blocked storage and unknown-message handling |
+| `npm run typecheck --prefix frontend` | PASS after correction | An intermediate run detected duplicate catalog key TS1117; removed the duplicate and reran successfully |
+| `npm run build --prefix frontend` | PASS | Vite 8.3.5; JS 559.79 kB / gzip 153.00 kB. Existing chunk-size and mixed static/dynamic-import warnings remain |
+| `npm run lint --prefix frontend` | PASS with warnings | Exit 0; 28 React/hook warnings remain. No localization module warnings after separating provider and context |
+| Edge/Playwright local browser smoke | PASS within scope | Customer, merchant, driver and admin logins; 19 authenticated Arabic/RTL page visits, plus mobile drawer and persisted English/LTR switch. Real local API/PostgreSQL/Redis, no intercepted API responses |
+| Catalog and API call comparison via local TypeScript-AST scripts | PASS | All literal `t(...)` source keys found in catalog or status map; 90 existing API call expressions unchanged |
+| Targeted Edge/Playwright recheck | PASS | Registration language switch preserves entered email; admin order filters display Arabic; no page exceptions observed |
+| Current-tree secret-pattern, documentation-link and Git whitespace checks | PASS within scope | 172 versioned/non-ignored files, no known secret-pattern matches; 4 localization-related Markdown documents with no missing relative file links; `git -c core.autocrlf=false diff --check` clean. Pattern checks do not prove absence of every possible secret |
+
+During browser verification, renaming the context module left the running Vite process with an old cached module path (404/blank page). Restarted that frontend process, then verified rendering. One repeated smoke attempt reached HTTP 429; kept rate limiting enabled and reran after the window elapsed. These intermediate attempts are not counted as passes. No backend source, database schema, dependency or deployed environment was changed for localization. Profile password UI validation was aligned with the existing backend minimum of eight characters.
+
 ## Security follow-up
 
 See [SECURITY_REVIEW.md](SECURITY_REVIEW.md) for findings and fixes. Updated local results: Vitest 5.0.5, Vite 8.3.5, 6 frontend tests passed, 20 backend tests passed, 6 real PostgreSQL integration tests passed, one real Redis test skipped locally, and full dependency scans (including development tools) reported zero findings in both packages. Migration 012 applied to the isolated test database. Historical rows below preserve the earlier readiness-review scope.

@@ -23,6 +23,7 @@ Set `VITE_API_URL` before building. Backend `CORS_ORIGIN` must match the fronten
 - [LoginPage](src/pages/auth/LoginPage.tsx), [auth tests](tests/Auth.test.tsx): form input, server errors, camelCase user contract.
 - [AuthContext](src/context/AuthContext.tsx), [API client](src/lib/api.ts): session state and shared refresh request.
 - [AppLayout](src/components/AppLayout.tsx): login and role guards, navigation and responsive sidebar.
+- [Localization provider](src/i18n/I18nProvider.tsx), [Arabic messages](src/i18n/messages.ts), [language switcher](src/components/LanguageSwitcher.tsx), [bilingual tests](tests/I18n.test.tsx). Arabic is the default; the switcher saves Arabic/English preference and updates RTL/LTR without resetting the form. See [localization guide](../docs/LOCALIZATION.md).
 - [Dashboard](src/pages/dashboard/DashboardPage.tsx), [Products](src/pages/merchant/MerchantProductsPage.tsx), [Orders](src/pages/customer/CustomerOrdersPage.tsx), [Admin users](src/pages/admin/AdminUsersPage.tsx).
 
-Tests use jsdom/Vitest/Testing Library; they are not browser-to-database end-to-end tests. Hook warnings and API-shape limitations are documented in the [audit](../docs/TECHNICAL_AUDIT.md). UI is English; there is no offline synchronization implementation.
+Tests use jsdom/Vitest/Testing Library; they are not browser-to-database end-to-end tests. Hook warnings and API-shape limitations are documented in the [audit](../docs/TECHNICAL_AUDIT.md). Arabic/English UI support does not include offline synchronization.

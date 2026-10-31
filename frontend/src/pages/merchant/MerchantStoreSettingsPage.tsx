@@ -1,9 +1,11 @@
+import { useI18n } from '../../i18n/I18nContext';
 import { useEffect, useState } from 'react';
 
 import { storesApi } from '../../lib/api';
 import { MapPin, Image as ImageIcon, Save, AlertCircle, Clock, DollarSign, CheckCircle } from 'lucide-react';
 
 export default function MerchantSettingsPage() {
+  const { t } = useI18n();
 
   const [store, setStore] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -141,8 +143,8 @@ export default function MerchantSettingsPage() {
         <div className="container">
           <div className="empty-state">
             <AlertCircle size={48} style={{ color: 'var(--warning)' }} />
-            <h3>No Store Found</h3>
-            <p>Your merchant account doesn't have an associated store yet. Please contact support.</p>
+            <h3>{t("No Store Found")}</h3>
+            <p>{t("Your merchant account doesn't have an associated store yet. Please contact support.")}</p>
           </div>
         </div>
       </div>
@@ -153,8 +155,8 @@ export default function MerchantSettingsPage() {
     <div className="page animate-fade-in">
       <div className="container" style={{ maxWidth: 800 }}>
         <div className="page-header">
-          <h1>Store Settings</h1>
-          <p>Manage your store details, pricing rules, images, and availability.</p>
+          <h1>{t("Store Settings")}</h1>
+          <p>{t("Manage your store details, pricing rules, images, and availability.")}</p>
         </div>
 
         {successMsg && (
@@ -163,7 +165,7 @@ export default function MerchantSettingsPage() {
             style={{
               padding: '1rem',
               marginBottom: '1.5rem',
-              borderLeft: '4px solid var(--success)',
+              borderInlineStart: '4px solid var(--success)',
               display: 'flex',
               alignItems: 'center',
               gap: '0.75rem',
@@ -171,7 +173,7 @@ export default function MerchantSettingsPage() {
             }}
           >
             <CheckCircle size={20} />
-            <span>{successMsg}</span>
+            <span>{t(successMsg)}</span>
           </div>
         )}
 
@@ -181,7 +183,7 @@ export default function MerchantSettingsPage() {
             style={{
               padding: '1rem',
               marginBottom: '1.5rem',
-              borderLeft: '4px solid var(--error)',
+              borderInlineStart: '4px solid var(--error)',
               display: 'flex',
               alignItems: 'center',
               gap: '0.75rem',
@@ -189,7 +191,7 @@ export default function MerchantSettingsPage() {
             }}
           >
             <AlertCircle size={20} />
-            <span>{errorMsg}</span>
+            <span>{t(errorMsg)}</span>
           </div>
         )}
 
@@ -208,7 +210,7 @@ export default function MerchantSettingsPage() {
                 style={{
                   position: 'absolute',
                   bottom: -30,
-                  left: 30,
+                  insetInlineStart: 30,
                   width: 80,
                   height: 80,
                   borderRadius: 'var(--radius-md)',
@@ -221,7 +223,7 @@ export default function MerchantSettingsPage() {
 
             <div className="grid grid-2">
               <div className="input-group">
-                <label>Store Name</label>
+                <label>{t("Store Name")}</label>
                 <div className="relative">
                   <input
                     className="input"
@@ -232,7 +234,7 @@ export default function MerchantSettingsPage() {
                 </div>
               </div>
               <div className="input-group">
-                <label>Contact Phone</label>
+                <label>{t("Contact Phone")}</label>
                 <input
                   className="input"
                   type="tel"
@@ -244,27 +246,27 @@ export default function MerchantSettingsPage() {
             </div>
 
             <div className="input-group">
-              <label>Description</label>
+              <label>{t("Description")}</label>
               <textarea
                 className="input"
                 rows={3}
                 value={form.description}
                 onChange={(e) => setForm({ ...form, description: e.target.value })}
                 style={{ resize: 'vertical' }}
-                placeholder="Describe your store and specialties"
+                placeholder={t("Describe your store and specialties")}
               />
             </div>
 
             <div className="input-group">
-              <label>Address</label>
+              <label>{t("Address")}</label>
               <div className="relative" style={{ display: 'flex', alignItems: 'center' }}>
-                <MapPin size={18} style={{ position: 'absolute', left: '1rem', color: 'var(--text-muted)' }} />
+                <MapPin size={18} style={{ position: 'absolute', insetInlineStart: '1rem', color: 'var(--text-muted)' }} />
                 <input
                   className="input"
-                  style={{ paddingLeft: '2.5rem' }}
+                  style={{ paddingInlineStart: '2.5rem' }}
                   value={form.address}
                   onChange={(e) => setForm({ ...form, address: e.target.value })}
-                  placeholder="Store physical location / street address"
+                  placeholder={t("Store physical location / street address")}
                 />
               </div>
             </div>
@@ -272,34 +274,34 @@ export default function MerchantSettingsPage() {
             {/* Minimum Order & Delivery Fee */}
             <div className="grid grid-2">
               <div className="input-group">
-                <label>Minimum Order Amount (SAR)</label>
+                <label>{t("Minimum Order Amount (SAR)")}</label>
                 <div className="relative" style={{ display: 'flex', alignItems: 'center' }}>
-                  <DollarSign size={18} style={{ position: 'absolute', left: '1rem', color: 'var(--text-muted)' }} />
+                  <DollarSign size={18} style={{ position: 'absolute', insetInlineStart: '1rem', color: 'var(--text-muted)' }} />
                   <input
                     className="input"
                     type="number"
                     step="0.01"
                     min="0"
-                    style={{ paddingLeft: '2.5rem' }}
+                    style={{ paddingInlineStart: '2.5rem' }}
                     value={form.min_order}
                     onChange={(e) => setForm({ ...form, min_order: e.target.value })}
-                    placeholder="e.g. 10.00"
+                    placeholder={t("e.g. 10.00")}
                   />
                 </div>
               </div>
               <div className="input-group">
-                <label>Delivery Fee (SAR)</label>
+                <label>{t("Delivery Fee (SAR)")}</label>
                 <div className="relative" style={{ display: 'flex', alignItems: 'center' }}>
-                  <DollarSign size={18} style={{ position: 'absolute', left: '1rem', color: 'var(--text-muted)' }} />
+                  <DollarSign size={18} style={{ position: 'absolute', insetInlineStart: '1rem', color: 'var(--text-muted)' }} />
                   <input
                     className="input"
                     type="number"
                     step="0.01"
                     min="0"
-                    style={{ paddingLeft: '2.5rem' }}
+                    style={{ paddingInlineStart: '2.5rem' }}
                     value={form.delivery_fee}
                     onChange={(e) => setForm({ ...form, delivery_fee: e.target.value })}
-                    placeholder="e.g. 5.00"
+                    placeholder={t("e.g. 5.00")}
                   />
                 </div>
               </div>
@@ -307,31 +309,30 @@ export default function MerchantSettingsPage() {
 
             {/* Opening Hours */}
             <div className="input-group">
-              <label>Opening Hours</label>
+              <label>{t("Opening Hours")}</label>
               <div className="relative" style={{ display: 'flex', alignItems: 'center' }}>
-                <Clock size={18} style={{ position: 'absolute', left: '1rem', color: 'var(--text-muted)' }} />
+                <Clock size={18} style={{ position: 'absolute', insetInlineStart: '1rem', color: 'var(--text-muted)' }} />
                 <input
                   className="input"
                   type="text"
-                  style={{ paddingLeft: '2.5rem' }}
+                  style={{ paddingInlineStart: '2.5rem' }}
                   value={form.opening_hours}
                   onChange={(e) => setForm({ ...form, opening_hours: e.target.value })}
-                  placeholder="e.g. 08:00 - 23:00"
+                  placeholder={t("e.g. 08:00 - 23:00")}
                 />
               </div>
               <small style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginTop: '0.25rem' }}>
-                Format example: 08:00 - 23:00
-              </small>
+                {t("Format example: 08:00 - 23:00")}</small>
             </div>
 
             <div className="grid grid-2" style={{ marginTop: '0.5rem' }}>
               <div className="input-group">
-                <label>Logo URL</label>
+                <label>{t("Logo URL")}</label>
                 <div className="relative" style={{ display: 'flex', alignItems: 'center' }}>
-                  <ImageIcon size={18} style={{ position: 'absolute', left: '1rem', color: 'var(--text-muted)' }} />
+                  <ImageIcon size={18} style={{ position: 'absolute', insetInlineStart: '1rem', color: 'var(--text-muted)' }} />
                   <input
                     className="input"
-                    style={{ paddingLeft: '2.5rem' }}
+                    style={{ paddingInlineStart: '2.5rem' }}
                     value={form.logo_url}
                     onChange={(e) => setForm({ ...form, logo_url: e.target.value })}
                     placeholder="https://example.com/logo.png"
@@ -339,12 +340,12 @@ export default function MerchantSettingsPage() {
                 </div>
               </div>
               <div className="input-group">
-                <label>Cover Image URL</label>
+                <label>{t("Cover Image URL")}</label>
                 <div className="relative" style={{ display: 'flex', alignItems: 'center' }}>
-                  <ImageIcon size={18} style={{ position: 'absolute', left: '1rem', color: 'var(--text-muted)' }} />
+                  <ImageIcon size={18} style={{ position: 'absolute', insetInlineStart: '1rem', color: 'var(--text-muted)' }} />
                   <input
                     className="input"
-                    style={{ paddingLeft: '2.5rem' }}
+                    style={{ paddingInlineStart: '2.5rem' }}
                     value={form.cover_url}
                     onChange={(e) => setForm({ ...form, cover_url: e.target.value })}
                     placeholder="https://example.com/cover.png"
@@ -365,10 +366,9 @@ export default function MerchantSettingsPage() {
               }}
             >
               <div className="settings-info">
-                <h4 style={{ margin: 0, marginBottom: '0.25rem' }}>Store Visibility</h4>
+                <h4 style={{ margin: 0, marginBottom: '0.25rem' }}>{t("Store Visibility")}</h4>
                 <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-                  Allow customers to see your store and place orders.
-                </p>
+                  {t("Allow customers to see your store and place orders.")}</p>
               </div>
               <label className="toggle-switch">
                 <input
@@ -386,8 +386,7 @@ export default function MerchantSettingsPage() {
                   <div className="spinner" style={{ width: 20, height: 20, borderWidth: 2 }} />
                 ) : (
                   <>
-                    <Save size={18} /> Save Settings
-                  </>
+                    <Save size={18} /> {t(" Save Settings")}</>
                 )}
               </button>
             </div>

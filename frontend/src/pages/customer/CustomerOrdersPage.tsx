@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n/I18nContext';
 import { useEffect, useState } from 'react';
 import { ordersApi, ratingsApi } from '../../lib/api';
 import {
@@ -6,6 +7,7 @@ import {
 } from 'lucide-react';
 
 export default function CustomerOrdersPage() {
+  const { t, locale } = useI18n();
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedOrders, setExpandedOrders] = useState<Record<string, boolean>>({});
@@ -178,7 +180,7 @@ export default function CustomerOrdersPage() {
         <div className="container">
           <div className="loading-screen">
             <div className="spinner" />
-            <p style={{ color: 'var(--text-secondary)' }}>Loading your orders...</p>
+            <p style={{ color: 'var(--text-secondary)' }}>{t("Loading your orders...")}</p>
           </div>
         </div>
       </div>
@@ -191,20 +193,20 @@ export default function CustomerOrdersPage() {
         {toastMessage && (
           <div className="toast toast-success">
             <CheckCircle size={20} />
-            <span>{toastMessage}</span>
+            <span>{t(toastMessage)}</span>
           </div>
         )}
 
         <div className="page-header">
-          <h1>My Orders</h1>
-          <p>Track your past and current orders.</p>
+          <h1>{t("My Orders")}</h1>
+          <p>{t("Track your past and current orders.")}</p>
         </div>
 
         {orders.length === 0 ? (
           <div className="empty-state glass-card">
             <Package size={64} />
-            <h3>No orders found</h3>
-            <p>You haven't placed any orders yet.</p>
+            <h3>{t("No orders found")}</h3>
+            <p>{t("You haven't placed any orders yet.")}</p>
           </div>
         ) : (
           <div className="grid">
@@ -212,7 +214,7 @@ export default function CustomerOrdersPage() {
               const statusInfo = getStatusDisplay(order.status);
               const orderNumber = order.order_number || order.orderNumber || order.id?.slice(0, 8);
               const orderDate = order.created_at || order.createdAt;
-              const storeName = order.store?.name || order.storeName || 'Store';
+              const storeName = order.store?.name || order.storeName || t('Store');
               const isExpanded = !!expandedOrders[order.id];
               const itemsList = order.items || order.orderItems || [];
               const itemCount = itemsList.reduce((acc: number, it: any) => acc + (it.quantity || 1), 0);
@@ -240,17 +242,16 @@ export default function CustomerOrdersPage() {
                       <div>
                         <h3 style={{ fontSize: '1.15rem', marginBottom: 2 }}>{storeName}</h3>
                         <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem', fontFamily: 'monospace' }}>
-                          Order #{orderNumber}
+                          {t("Order #")}{orderNumber}
                         </div>
                       </div>
                     </div>
 
-                    <div style={{ textAlign: 'right' }}>
+                    <div style={{ textAlign: "end" }}>
                       <div style={{ fontWeight: 700, fontSize: '1.2rem', color: 'var(--accent)' }}>
-                        {order.total} SAR
-                      </div>
+                        {order.total} {t(" SAR")}</div>
                       <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>
-                        {orderDate ? new Date(orderDate).toLocaleString() : ''}
+                        {orderDate ? new Date(orderDate).toLocaleString(locale) : ''}
                       </div>
                     </div>
                   </div>
@@ -266,10 +267,10 @@ export default function CustomerOrdersPage() {
                   >
                     <div className="flex justify-between items-center" style={{ marginBottom: '0.5rem', fontSize: '0.9rem' }}>
                       <span style={{ fontWeight: 600, color: statusInfo.color }}>
-                        {statusInfo.text}
+                        {t(statusInfo.text)}
                       </span>
                       <span className={`badge ${statusInfo.badgeClass}`}>
-                        {order.status?.replace(/_/g, ' ')}
+                        {t(order.status)}
                       </span>
                     </div>
 
@@ -296,7 +297,7 @@ export default function CustomerOrdersPage() {
                     >
                       <MapPin size={16} style={{ marginTop: 2, flexShrink: 0, color: 'var(--primary-light)' }} />
                       <div>
-                        <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem', display: 'block' }}>Delivery Address</span>
+                        <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem', display: 'block' }}>{t("Delivery Address")}</span>
                         {order.delivery_address || order.deliveryAddress}
                       </div>
                     </div>
@@ -317,7 +318,7 @@ export default function CustomerOrdersPage() {
                         style={{ padding: '0.4rem 0.75rem', fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}
                       >
                         <ShoppingBag size={15} />
-                        <span>{isExpanded ? 'Hide Items' : `View Items (${itemCount || itemsList.length})`}</span>
+                        <span>{isExpanded ? t("Hide Items") : t("View Items ({v0})", { v0: itemCount || itemsList.length })}</span>
                         {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                       </button>
 
@@ -333,8 +334,7 @@ export default function CustomerOrdersPage() {
                               border: '1px solid rgba(255, 82, 82, 0.4)',
                             }}
                           >
-                            Cancel Order
-                          </button>
+                            {t("Cancel Order")}</button>
                         )}
 
                         {canRate && (
@@ -344,7 +344,7 @@ export default function CustomerOrdersPage() {
                             style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
                           >
                             <Star size={15} style={{ fill: 'currentColor' }} />
-                            <span>Rate Order</span>
+                            <span>{t("Rate Order")}</span>
                           </button>
                         )}
                       </div>
@@ -363,13 +363,12 @@ export default function CustomerOrdersPage() {
                       >
                         {itemsList.length === 0 ? (
                           <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', textAlign: 'center' }}>
-                            Item details unavailable.
-                          </p>
+                            {t("Item details unavailable.")}</p>
                         ) : (
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                             {itemsList.map((item: any, idx: number) => {
                               const itemName =
-                                item.product?.name || item.product_name || item.productName || item.name || `Item #${idx + 1}`;
+                                item.product?.name || item.product_name || item.productName || item.name || t('Item #{number}', { number: idx + 1 });
                               const itemQty = item.quantity || 1;
                               const unitPrice =
                                 item.unit_price ?? item.unitPrice ?? item.price ?? item.price_at_add ?? 0;
@@ -417,14 +416,12 @@ export default function CustomerOrdersPage() {
                                     <div>
                                       <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>{itemName}</div>
                                       <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>
-                                        {itemQty} × {unitPrice} SAR
-                                      </div>
+                                        {itemQty} × {unitPrice} {t(" SAR")}</div>
                                     </div>
                                   </div>
 
                                   <div style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--text-primary)' }}>
-                                    {lineTotal} SAR
-                                  </div>
+                                    {lineTotal} {t(" SAR")}</div>
                                 </div>
                               );
                             })}
@@ -438,10 +435,9 @@ export default function CustomerOrdersPage() {
                                 color: 'var(--text-secondary)',
                               }}
                             >
-                              <span>Items Subtotal</span>
+                              <span>{t("Items Subtotal")}</span>
                               <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
-                                {order.subtotal || order.total} SAR
-                              </span>
+                                {order.subtotal || order.total} {t(" SAR")}</span>
                             </div>
                           </div>
                         )}
@@ -466,7 +462,7 @@ export default function CustomerOrdersPage() {
             <div className="modal-header">
               <div className="flex items-center gap-2">
                 <AlertTriangle size={20} style={{ color: 'var(--error)' }} />
-                <h3>Cancel Order</h3>
+                <h3>{t("Cancel Order")}</h3>
               </div>
               <button
                 className="btn btn-ghost btn-sm"
@@ -478,18 +474,16 @@ export default function CustomerOrdersPage() {
             </div>
 
             <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '1.25rem' }}>
-              Are you sure you want to cancel order #{cancelModalOrder.order_number || cancelModalOrder.orderNumber || cancelModalOrder.id?.slice(0, 8)}?
-              This action cannot be undone.
-            </p>
+              {t("Are you sure you want to cancel order #")}{cancelModalOrder.order_number || cancelModalOrder.orderNumber || cancelModalOrder.id?.slice(0, 8)}{t("? This action cannot be undone.")}</p>
 
             <form onSubmit={handleConfirmCancel}>
               <div className="input-group" style={{ marginBottom: '1.5rem' }}>
-                <label>Cancellation Reason *</label>
+                <label>{t("Cancellation Reason *")}</label>
                 <textarea
                   className="input"
                   rows={3}
                   required
-                  placeholder="Please let us know why you are cancelling this order..."
+                  placeholder={t("Please let us know why you are cancelling this order...")}
                   value={cancelReason}
                   onChange={(e) => setCancelReason(e.target.value)}
                   style={{ resize: 'vertical' }}
@@ -507,7 +501,7 @@ export default function CustomerOrdersPage() {
                     marginBottom: '1.25rem',
                   }}
                 >
-                  {cancelError}
+                  {t(cancelError)}
                 </div>
               )}
 
@@ -518,8 +512,7 @@ export default function CustomerOrdersPage() {
                   onClick={closeCancelModal}
                   disabled={cancelling}
                 >
-                  Keep Order
-                </button>
+                  {t("Keep Order")}</button>
                 <button
                   type="submit"
                   className="btn btn-danger"
@@ -528,7 +521,7 @@ export default function CustomerOrdersPage() {
                   {cancelling ? (
                     <div className="spinner" style={{ width: 18, height: 18, borderWidth: 2 }} />
                   ) : (
-                    'Cancel Order'
+                    t("Cancel Order")
                   )}
                 </button>
               </div>
@@ -548,7 +541,7 @@ export default function CustomerOrdersPage() {
             <div className="modal-header">
               <div className="flex items-center gap-2">
                 <Star size={20} style={{ color: 'var(--warning)', fill: 'currentColor' }} />
-                <h3>Rate Order</h3>
+                <h3>{t("Rate Order")}</h3>
               </div>
               <button
                 className="btn btn-ghost btn-sm"
@@ -560,9 +553,9 @@ export default function CustomerOrdersPage() {
             </div>
 
             <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
-              How was your experience with{' '}
+              {t("How was your experience with")}{' '}
               <strong style={{ color: 'var(--text-primary)' }}>
-                {rateModalOrder.store?.name || 'this store'}
+                {rateModalOrder.store?.name || t("this store")}
               </strong>
               ?
             </p>
@@ -602,17 +595,17 @@ export default function CustomerOrdersPage() {
                   })}
                 </div>
                 <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--warning)' }}>
-                  {getStarRatingLabel(hoverRating || rating)}
+                  {t(getStarRatingLabel(hoverRating || rating))}
                 </div>
               </div>
 
               {/* Review Comment Input */}
               <div className="input-group" style={{ marginBottom: '1.5rem' }}>
-                <label>Comment (Optional)</label>
+                <label>{t("Comment (Optional)")}</label>
                 <textarea
                   className="input"
                   rows={3}
-                  placeholder="Share details of your experience with the food and delivery..."
+                  placeholder={t("Share details of your experience with the food and delivery...")}
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
                   style={{ resize: 'vertical' }}
@@ -630,7 +623,7 @@ export default function CustomerOrdersPage() {
                     marginBottom: '1.25rem',
                   }}
                 >
-                  {rateError}
+                  {t(rateError)}
                 </div>
               )}
 
@@ -641,8 +634,7 @@ export default function CustomerOrdersPage() {
                   onClick={closeRateModal}
                   disabled={ratingSubmitting}
                 >
-                  Cancel
-                </button>
+                  {t("Cancel")}</button>
                 <button
                   type="submit"
                   className="btn btn-primary"
@@ -651,7 +643,7 @@ export default function CustomerOrdersPage() {
                   {ratingSubmitting ? (
                     <div className="spinner" style={{ width: 18, height: 18, borderWidth: 2 }} />
                   ) : (
-                    'Submit Rating'
+                    t("Submit Rating")
                   )}
                 </button>
               </div>
