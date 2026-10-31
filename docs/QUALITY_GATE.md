@@ -1,8 +1,12 @@
 # Executed quality gate
 
+## Security follow-up
+
+See [SECURITY_REVIEW.md](SECURITY_REVIEW.md) for findings and fixes. Updated local results: Vitest 5.0.5, Vite 8.3.5, 6 frontend tests passed, 20 backend tests passed, 6 real PostgreSQL integration tests passed, one real Redis test skipped locally, and full dependency scans (including development tools) reported zero findings in both packages. Migration 012 applied to the isolated test database. Historical rows below preserve the earlier readiness-review scope.
+
 Date: 31 October 2026, Asia/Riyadh. Results refer to this local working branch. The owner subsequently authorized publishing it to GitHub; the results below remain the observed local review evidence. A command is not marked PASS merely because it was added to CI. Commands below are run from repository root unless stated otherwise. PowerShell command groups may have a final shell exit code from their last command; the individual tool output was inspected for each reported result.
 
-## Final observed results
+## Original readiness review results
 
 | Check / command | Result | Evidence / limit |
 | --- | --- | --- |

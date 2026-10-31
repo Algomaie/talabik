@@ -1,5 +1,7 @@
 # Recruitment-readiness change map
 
+A later security follow-up additionally updates dependency tooling, removes unused Swagger packages, adds session token validation and migration 012, enforces profile approval and single-driver acceptance, adds security tests, full dependency-audit CI, a Git-history pattern checker, Dependabot and security documentation. See [SECURITY_REVIEW.md](SECURITY_REVIEW.md).
+
 This is a review navigation map, not an authorship claim. Twelve frontend files had pre-existing uncommitted changes. The owner subsequently authorized committing and publishing the prepared branch. Historical commits were not rewritten. Review the branch diff for exact lines and review the pre-existing changes separately.
 
 ## Frontend

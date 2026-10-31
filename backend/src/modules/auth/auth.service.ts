@@ -13,6 +13,7 @@ import {
 import { cacheService } from '../../redis/cache.service';
 import { CacheKeys } from '../../common/constants/cache-keys';
 import { logger } from '../../common/utils/logger';
+import { verifySessionToken, SessionClaims } from '../../common/utils/session-token';
 
 export class AuthService {
   /**
@@ -110,6 +111,7 @@ export class AuthService {
       phone: userWithPassword.phone,
       avatarUrl: userWithPassword.avatarUrl,
       isActive: userWithPassword.isActive,
+      tokenVersion: userWithPassword.tokenVersion,
       roles: userWithPassword.roles,
     };
 
@@ -127,9 +129,9 @@ export class AuthService {
    */
   async refresh(refreshToken: string): Promise<TokenPair> {
     // Verify refresh token
-    let payload: { sub: string; jti: string };
+    let payload: SessionClaims;
     try {
-      payload = jwt.verify(refreshToken, config.jwt.refreshSecret) as any;
+      payload = verifySessionToken(refreshToken, config.jwt.refreshSecret, 'refresh');
     } catch (err) {
       if (err instanceof jwt.TokenExpiredError) {
         throw new AuthenticationError('Refresh token has expired', 'REFRESH_TOKEN_EXPIRED');
@@ -155,6 +157,9 @@ export class AuthService {
     if (!user.isActive) {
       throw new BusinessRuleError('Account is suspended', 'ACCOUNT_SUSPENDED');
     }
+    if (user.tokenVersion !== payload.tokenVersion) {
+      throw new AuthenticationError('Session has been revoked', 'SESSION_REVOKED');
+    }
 
     // Generate new token pair
     const tokens = await this.generateTokenPair(user);
@@ -168,6 +173,7 @@ export class AuthService {
    * Logout — invalidate both access and refresh tokens.
    */
   async logout(userId: string, accessTokenId: string, accessTokenExp: number): Promise<void> {
+    await authRepository.invalidateSessions(userId);
     // Blacklist the access token for its remaining lifetime
     const remainingTtl = accessTokenExp - Math.floor(Date.now() / 1000);
     if (remainingTtl > 0) {
@@ -197,7 +203,7 @@ export class AuthService {
 
   /**
    * Generate access + refresh token pair.
-   * Stores refresh token hash in Redis for validation.
+   * Stores a refresh token reference in Redis for validation.
    */
   private async generateTokenPair(user: AuthUser): Promise<TokenPair> {
     const accessTokenId = uuidv4();
@@ -210,9 +216,11 @@ export class AuthService {
         email: user.email,
         roles: user.roles,
         jti: accessTokenId,
+        tokenUse: 'access',
+        tokenVersion: user.tokenVersion,
       },
       config.jwt.accessSecret,
-      { expiresIn: config.jwt.accessExpiresIn as any }
+      { algorithm: 'HS256', expiresIn: config.jwt.accessExpiresIn as any }
     );
 
     // Refresh token — long-lived, minimal payload
@@ -220,9 +228,11 @@ export class AuthService {
       {
         sub: user.id,
         jti: refreshTokenId,
+        tokenUse: 'refresh',
+        tokenVersion: user.tokenVersion,
       },
       config.jwt.refreshSecret,
-      { expiresIn: config.jwt.refreshExpiresIn as any }
+      { algorithm: 'HS256', expiresIn: config.jwt.refreshExpiresIn as any }
     );
 
     // Store refresh token reference in Redis

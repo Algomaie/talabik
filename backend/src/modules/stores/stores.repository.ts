@@ -84,7 +84,7 @@ export class StoresRepository {
 
   async getMerchantIdByUserId(userId: string): Promise<string | null> {
     const result = await query<{ id: string }>(
-      'SELECT id FROM merchants WHERE user_id = $1',
+      "SELECT id FROM merchants WHERE user_id = $1 AND status = 'APPROVED'",
       [userId]
     );
     return result.rows[0]?.id ?? null;

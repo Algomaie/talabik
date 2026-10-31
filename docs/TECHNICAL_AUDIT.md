@@ -1,5 +1,7 @@
 # Technical audit — Talabak recruitment readiness
 
+The [security follow-up](SECURITY_REVIEW.md) supersedes the original review for dependency versions, session revocation, account approval and driver acceptance concurrency. Its full dependency audit includes development tools.
+
 Review date: **31 October 2026 (Asia/Riyadh)**. Working branch: `chore/recruitment-readiness`. This report describes local evidence, not a production certification. The owner subsequently authorized publishing the branch to GitHub. No public application deployment was made.
 
 ## Scope and repository baseline
@@ -22,10 +24,10 @@ Git reported different Windows ownership. Commands used a per-command `safe.dire
 | Backend TypeScript / Express | 5.9.3 / 4.22.3 |
 | PostgreSQL client / Redis client | pg 8.23.0 / ioredis 5.11.1 |
 | Validation | Zod 4.6.7 after security upgrade |
-| Tests | Vitest 3.2.7, Testing Library React 16.3.3, Supertest 7.3.0 |
+| Tests | Vitest 5.0.5, Testing Library React 16.3.3, Supertest 7.3.0 |
 | Services | Compose specifies PostgreSQL 16/Redis 7; local database tests ran on PostgreSQL 18 |
 
-Express runtime 4 previously used Express 5 types; types now match Express 4. React Query is installed but the current pages primarily use local React state and Axios; its presence is not evidence that React Query manages their data. Swagger dependencies are installed but no Swagger UI endpoint is mounted.
+Express runtime 4 previously used Express 5 types; types now match Express 4. React Query is installed but the current pages primarily use local React state and Axios; its presence is not evidence that React Query manages their data. Unused Swagger dependencies were removed in the security follow-up; no Swagger UI endpoint is mounted.
 
 ## Findings and actions
 
@@ -80,10 +82,10 @@ Cash/payment rows are a demonstration model. Merchant confirmation no longer fal
 | High for deployment | Redis and Compose could not be executed here; hosted CI not run | Run the real Redis test and the complete Compose fresh-clone workflow before deployment |
 | High for deployment | Tokens in localStorage; no cookie/CSRF redesign | XSS can expose sessions; assess cookie sessions and CSP before public rollout |
 | Medium | User creation/role is transactional, role-specific profile creation is separate | A failed merchant/driver profile insert can leave a partial registration; combine in a transaction with dedicated tests |
-| Medium | Driver acceptance does not lock a driver's availability against accepting different deliveries concurrently | Add driver-row locking and explicit availability policy; current test proves duplicate completion safety, not all dispatch concurrency |
+| Resolved in security follow-up | Concurrent acceptance of different jobs by one driver | Driver-row locking and BUSY availability enforcement added; real PostgreSQL concurrency test passed |
 | Medium | Migration DDL and ledger insert are separate; no global migration lock | Crash/concurrent deploy recovery needs transactional runner and operator procedure |
 | Medium | Many pages use `any`, console-only failures, broad fallbacks and mixed API naming conventions | Improve endpoint types and bounded error states incrementally; do not imply every page mutation is verified |
-| Medium | Profile/password/session revocation semantics need wider security tests | Verify password change session policy and all logout/multi-session cases with real Redis |
+| Partly resolved in security follow-up | Password changes and logout now revoke sessions through database token versions | Real PostgreSQL tests pass with a session-store double; real Redis integration is separately exercised in CI |
 | Medium | No full browser checkout after final Cart fixes | DOM + real API/DB suites pass independently; final browser request was blocked by automatic-review usage limit |
 | Low | React hook/lint warnings remain; frontend bundle about 518 kB minified | Address effect dependencies/race cleanup and route splitting after correctness work |
 | Operational | Git metadata owned by a different Windows SID | Owner may need to repair ACLs before normal commit/index operations; no global permission changes were made |

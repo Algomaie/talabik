@@ -114,7 +114,7 @@ router.patch('/merchants/:id/status', validate(z.object({ status: z.enum(['PENDI
   try {
     const { status } = req.body;
     const result = await query(
-      `UPDATE merchants SET status = $1, approved_at = CASE WHEN $1 = 'APPROVED' THEN NOW() ELSE approved_at END,
+      `UPDATE merchants SET status = $1::varchar, approved_at = CASE WHEN $1::varchar = 'APPROVED' THEN NOW() ELSE approved_at END,
                             updated_at = NOW()
        WHERE id = $2 RETURNING *`,
       [status, req.params.id]

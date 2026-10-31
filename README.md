@@ -21,7 +21,7 @@ This is a portfolio implementation, not a production-readiness certification. Re
 | Frontend | React 19.3, TypeScript 6.0, Vite 8.3, React Router 7.18, Axios 1.20 |
 | Backend | Express 4.22, TypeScript 5.9, Zod 4.6, pg 8.23, ioredis 5.11 |
 | Services | Compose: PostgreSQL 16 and Redis 7; local integration: PostgreSQL 18 |
-| Verification | Node 24.22, Vitest 3.2, Testing Library, Supertest, Oxlint |
+| Verification | Node 24.22, Vitest 5.0, Testing Library, Supertest, Oxlint |
 
 Exact versions are in package lockfiles. Use **Node 24 LTS** for this workflow; older Node versions have not been verified with the frontend toolchain.
 
@@ -121,6 +121,10 @@ npm run dev --prefix frontend -- --port 5173 --strictPort
 
 Open [frontend](http://localhost:5173) and [API health](http://localhost:5000/health). Health is process liveness, not service readiness. Keep hostname consistent: `localhost` and `127.0.0.1` are different CORS origins.
 
+## Account approval and session updates
+
+New merchant and driver registrations stay pending until an administrator approves them. Seeded demo profiles are already approved. After updating to the security follow-up, run all migrations (including 012) and sign in again: old token formats are rejected. Password changes and logout revoke all existing sessions. See [Security review](docs/SECURITY_REVIEW.md) and [Security policy](SECURITY.md).
+
 ## Local demo accounts
 
 Initial password: `Demo@1234`. These are public **local demo credentials**, never production credentials. Production rejects seed; frontend production builds hide demo shortcuts. Re-seeding preserves existing passwords and inventory, but maintains demo catalog/profile records: always use a dedicated demo database.
@@ -134,7 +138,7 @@ Initial password: `Demo@1234`. These are public **local demo credentials**, neve
 
 ## API documentation
 
-[API reference](docs/API_REFERENCE.md). Responses use `{ success, data }`; paginated responses put arrays in `data` and metadata in `meta`. Auth user fields are camelCase; some admin/delivery endpoints return snake_case. Source routes are authoritative. Swagger packages are installed, but no Swagger endpoint is mounted.
+[API reference](docs/API_REFERENCE.md). Responses use `{ success, data }`; paginated responses put arrays in `data` and metadata in `meta`. Auth user fields are camelCase; some admin/delivery endpoints return snake_case. Source routes are authoritative. The route files document the actual API; unused Swagger dependencies have been removed.
 
 ## Automated testing
 
@@ -169,6 +173,8 @@ npm run preview --prefix frontend
 Preview uses port 4173 by default; adjust backend CORS for that local origin. Deployment requires HTTPS, private service networking, generated secrets, SPA fallback for `frontend/dist`, and the correct build-time `VITE_API_URL`. No public deployment is provisioned here. Run migrations from source with `npm run migrate`; do not mix compiled/source migration names in an existing ledger.
 
 ## Security, limitations and future improvements
+
+Full dependency scans now include development tools. Run `npm audit --prefix backend` and `npm audit --prefix frontend`; CI fails on any reported severity. The [history pattern check](scripts/check-secret-patterns.cjs) also runs in CI. These checks do not prove absence of all vulnerabilities.
 
 - No payment gateway is integrated. Cash/payment rows demonstrate the model; merchant confirmation does not prove payment collection.
 - Development can continue without Redis, but session refresh/revocation/rate limiting then lose their normal guarantees. Production startup requires Redis and security-store failures return 503.

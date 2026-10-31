@@ -8,7 +8,7 @@ export class AuthRepository {
   async findByEmail(email: string): Promise<(AuthUser & { passwordHash: string }) | null> {
     const result = await query<any>(
       `SELECT u.id, u.email, u.password_hash, u.first_name, u.last_name,
-              u.phone, u.avatar_url, u.is_active,
+              u.phone, u.avatar_url, u.is_active, u.token_version,
               COALESCE(
                 json_agg(r.name) FILTER (WHERE r.name IS NOT NULL),
                 '[]'
@@ -33,6 +33,7 @@ export class AuthRepository {
       phone: row.phone,
       avatarUrl: row.avatar_url,
       isActive: row.is_active,
+      tokenVersion: row.token_version,
       roles: row.roles,
     };
   }
@@ -43,7 +44,7 @@ export class AuthRepository {
   async findById(id: string): Promise<AuthUser | null> {
     const result = await query<any>(
       `SELECT u.id, u.email, u.first_name, u.last_name,
-              u.phone, u.avatar_url, u.is_active,
+              u.phone, u.avatar_url, u.is_active, u.token_version,
               COALESCE(
                 json_agg(r.name) FILTER (WHERE r.name IS NOT NULL),
                 '[]'
@@ -67,6 +68,7 @@ export class AuthRepository {
       phone: row.phone,
       avatarUrl: row.avatar_url,
       isActive: row.is_active,
+      tokenVersion: row.token_version,
       roles: row.roles,
     };
   }
@@ -135,7 +137,7 @@ export class AuthRepository {
   ): Promise<string> {
     const result = await query<{ id: string }>(
       `INSERT INTO merchants (user_id, business_name, business_email, business_phone, status)
-       VALUES ($1, $2, $3, $4, 'APPROVED')
+       VALUES ($1, $2, $3, $4, 'PENDING')
        RETURNING id`,
       [userId, businessName, businessEmail ?? null, businessPhone ?? null]
     );
@@ -153,7 +155,7 @@ export class AuthRepository {
   ): Promise<string> {
     const result = await query<{ id: string }>(
       `INSERT INTO drivers (user_id, license_number, vehicle_type, vehicle_plate, status)
-       VALUES ($1, $2, $3, $4, 'APPROVED')
+       VALUES ($1, $2, $3, $4, 'PENDING')
        RETURNING id`,
       [userId, licenseNumber ?? null, vehicleType ?? null, vehiclePlate ?? null]
     );
@@ -168,6 +170,10 @@ export class AuthRepository {
       'UPDATE users SET last_login_at = NOW() WHERE id = $1',
       [userId]
     );
+  }
+
+  async invalidateSessions(userId: string): Promise<void> {
+    await query('UPDATE users SET token_version = token_version + 1, updated_at = NOW() WHERE id = $1', [userId]);
   }
 }
 

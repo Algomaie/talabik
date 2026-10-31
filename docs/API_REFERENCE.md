@@ -1,6 +1,6 @@
 # API reference
 
-Base URL: `http://localhost:5000/api/v1`. The route files under `backend/src/modules/` are the authoritative contract. This table is a navigation aid, not generated OpenAPI documentation. Swagger packages are installed but no Swagger route is mounted.
+Base URL: `http://localhost:5000/api/v1`. The route files under `backend/src/modules/` are the authoritative contract. This table is a navigation aid, not generated OpenAPI documentation. No Swagger route is mounted; unused Swagger dependencies were removed in the security follow-up.
 
 ## API Endpoints
 

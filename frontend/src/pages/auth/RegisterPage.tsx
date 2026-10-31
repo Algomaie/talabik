@@ -228,6 +228,9 @@ export default function RegisterPage() {
             </>
           )}
 
+          <p className="auth-subtitle">
+            Merchant and driver accounts require administrator approval before managing stores or deliveries.
+          </p>
           <p className="auth-footer">
             Already have an account? <Link to="/login">Sign in</Link>
           </p>

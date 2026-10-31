@@ -24,7 +24,7 @@ router.patch(
     try {
       const result = await query(
         `UPDATE drivers SET availability = $1, updated_at = NOW()
-         WHERE user_id = $2 RETURNING id, availability`,
+         WHERE user_id = $2 AND status = 'APPROVED' AND availability <> 'BUSY' RETURNING id, availability`,
         [req.body.availability, req.user!.id]
       );
       if (result.rows.length === 0) throw new NotFoundError('Driver profile');

@@ -99,7 +99,7 @@ router.patch(
       });
 
       await query(
-        'UPDATE users SET password_hash = $1, updated_at = NOW() WHERE id = $2',
+        'UPDATE users SET password_hash = $1, token_version = token_version + 1, updated_at = NOW() WHERE id = $2',
         [newHash, req.user!.id]
       );
 

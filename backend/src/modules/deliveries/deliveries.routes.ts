@@ -39,6 +39,7 @@ router.get(
   requireRoles(Role.DRIVER),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
+      await getDriverId(req.user!.id);
       const { page, limit, offset } = parsePagination(req.query as any);
 
       const countResult = await query<{ count: string }>(
@@ -77,6 +78,13 @@ router.post(
 
       // Atomic acceptance — prevents double-accept via WHERE clause
       await withTransaction(async (client) => {
+        // Lock the driver as well as the delivery so different jobs cannot both
+        // be accepted by the same driver during simultaneous requests.
+        const availableDriver = await client.query(
+          "SELECT id FROM drivers WHERE id = $1 AND status = 'APPROVED' AND availability = 'ONLINE' FOR UPDATE",
+          [driverId]
+        );
+        if (!availableDriver.rows.length) throw new ConflictError('Driver must be approved and online', 'DRIVER_UNAVAILABLE');
         // Lock the delivery row and check it's still available
         const lockResult = await client.query(
           `SELECT d.*, o.id as order_id, o.status as order_status
@@ -212,11 +220,12 @@ router.patch(
       const { latitude, longitude } = req.body;
 
       // Update delivery current location
-      await query(
+      const updated = await query(
         `UPDATE deliveries SET current_latitude = $1, current_longitude = $2, updated_at = NOW()
-         WHERE id = $3 AND driver_id = $4`,
+         WHERE id = $3 AND driver_id = $4 AND status IN ('ASSIGNED', 'PICKED_UP', 'IN_TRANSIT') RETURNING id`,
         [latitude, longitude, req.params.id, driverId]
       );
+      if (!updated.rows.length) throw new NotFoundError('Active delivery');
 
       // Update driver current location
       await query(

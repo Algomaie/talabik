@@ -48,7 +48,7 @@ export function requireOwnership(getOwnerId: (req: Request) => string | undefine
     }
 
     const ownerId = getOwnerId(req);
-    if (ownerId && ownerId !== req.user.id) {
+    if (!ownerId || ownerId !== req.user.id) {
       next(
         new AuthorizationError(
           'You do not have access to this resource',

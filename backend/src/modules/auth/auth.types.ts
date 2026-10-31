@@ -33,6 +33,7 @@ export interface AuthUser {
   phone: string | null;
   avatarUrl: string | null;
   isActive: boolean;
+  tokenVersion: number;
   roles: string[];
 }
 

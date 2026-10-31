@@ -5,15 +5,9 @@ import { AuthenticationError } from '../errors';
 import { cacheService } from '../../redis/cache.service';
 import { CacheKeys } from '../constants/cache-keys';
 import { authRepository } from '../../modules/auth/auth.repository';
+import { verifySessionToken, SessionClaims } from '../utils/session-token';
 
-export interface JwtPayload {
-  sub: string;       // user ID
-  email: string;
-  roles: string[];
-  jti: string;       // token ID (for blacklisting)
-  iat: number;
-  exp: number;
-}
+export type JwtPayload = SessionClaims;
 
 // Extend Express Request
 declare global {
@@ -52,7 +46,7 @@ export async function authMiddleware(
     // Verify token signature and expiration
     let payload: JwtPayload;
     try {
-      payload = jwt.verify(token, config.jwt.accessSecret) as JwtPayload;
+      payload = verifySessionToken(token, config.jwt.accessSecret, 'access');
     } catch (err) {
       if (err instanceof jwt.TokenExpiredError) {
         throw new AuthenticationError('Access token has expired', 'TOKEN_EXPIRED');
@@ -72,11 +66,14 @@ export async function authMiddleware(
     if (!currentUser || !currentUser.isActive) {
       throw new AuthenticationError('Account is unavailable', 'ACCOUNT_UNAVAILABLE');
     }
+    if (currentUser.tokenVersion !== payload.tokenVersion) {
+      throw new AuthenticationError('Session has been revoked', 'SESSION_REVOKED');
+    }
 
     // Attach user info to request
     req.user = {
       id: payload.sub,
-      email: payload.email,
+      email: currentUser.email,
       roles: currentUser.roles,
       tokenId: payload.jti,
     };
@@ -108,15 +105,16 @@ export async function optionalAuthMiddleware(
     }
 
     try {
-      const payload = jwt.verify(token, config.jwt.accessSecret) as JwtPayload;
+      const payload = verifySessionToken(token, config.jwt.accessSecret, 'access');
       const isBlacklisted = await cacheService.exists(
         CacheKeys.accessBlacklist(payload.jti)
       );
-      if (!isBlacklisted) {
+      const currentUser = await authRepository.findById(payload.sub);
+      if (!isBlacklisted && currentUser?.isActive && currentUser.tokenVersion === payload.tokenVersion) {
         req.user = {
           id: payload.sub,
-          email: payload.email,
-          roles: payload.roles,
+          email: currentUser.email,
+          roles: currentUser.roles,
           tokenId: payload.jti,
         };
       }
